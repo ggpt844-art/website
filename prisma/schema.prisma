@@ -1,0 +1,366 @@
+// Local Funnel Radar + Cinematic Demo Factory
+// Prisma schema (PostgreSQL)
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== Enums =====
+
+enum DiscoveryStatus {
+  queued
+  running
+  completed
+  failed
+}
+
+enum WebsiteStatus {
+  no_website
+  social_only
+  directory_only
+  broken_website
+  outdated_website
+  basic_brochure_site
+  decent_but_low_conversion
+  good_site_but_no_funnel
+  hard_to_beat
+  unclear
+}
+
+enum LeadPriority {
+  hot
+  warm
+  low
+  skip
+}
+
+enum DemoConfigStatus {
+  draft
+  generated
+  qa_running
+  approved
+  rejected
+  needs_manual_polish
+}
+
+enum DemoVersionStatus {
+  draft
+  graded
+  improved
+  approved
+  rejected
+  winner
+}
+
+enum ReviewStatus {
+  pending
+  approved
+  rejected
+  needs_manual_polish
+  contacted
+  replied
+  won
+  lost
+}
+
+enum SourceType {
+  google_search
+  maps_like_result
+  yellowpages
+  yelp
+  homestars
+  bbb
+  facebook
+  instagram
+  website
+  directory
+  manual
+}
+
+// ===== Models =====
+
+model TargetCity {
+  id        String   @id @default(cuid())
+  name      String
+  region    String
+  country   String   @default("CA")
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  discoveryJobs DiscoveryJob[]
+
+  @@unique([name, region, country])
+}
+
+model TargetNiche {
+  id                 String   @id @default(cuid())
+  name               String
+  slug               String   @unique
+  categoryGroup      String
+  estimatedLeadValue Int      @default(500)
+  enabled            Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  discoveryJobs DiscoveryJob[]
+}
+
+model DiscoveryJob {
+  id              String          @id @default(cuid())
+  cityId          String
+  nicheId         String
+  status          DiscoveryStatus @default(queued)
+  query           String
+  batchSize       Int             @default(30)
+  businessesFound Int             @default(0)
+  businessesSaved Int             @default(0)
+  error           String?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  city  TargetCity  @relation(fields: [cityId], references: [id])
+  niche TargetNiche @relation(fields: [nicheId], references: [id])
+
+  @@index([status])
+  @@index([cityId, nicheId])
+}
+
+model Business {
+  id                   String        @id @default(cuid())
+  name                 String
+  normalizedName       String
+  slug                 String        @unique
+  niche                String
+  category             String?
+  city                 String
+  region               String?
+  country              String        @default("CA")
+  phone                String?
+  email                String?
+  address              String?
+  websiteUrl           String?
+  websiteStatus        WebsiteStatus @default(unclear)
+  rating               Float?
+  reviewCount          Int?
+  hoursJson            Json?
+  sourceConfidenceJson Json?
+  sourceUrlsJson       Json?
+  socialLinksJson      Json?
+  directoryLinksJson   Json?
+  isClosed             Boolean       @default(false)
+  isFranchise          Boolean       @default(false)
+  notes                String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  sources             BusinessSource[]
+  websiteChecks       WebsiteCheck[]
+  assetProfiles       AssetProfile[]
+  leadScores          LeadScore[]
+  competitorScans     CompetitorScan[]
+  intelligencePackets BusinessIntelligencePacket[]
+  demoConfigs         DemoConfig[]
+  demoVersions        DemoVersion[]
+  outreachMessages    OutreachMessage[]
+  reviewQueueItems    ReviewQueueItem[]
+
+  @@index([niche, city])
+  @@index([websiteStatus])
+  @@index([normalizedName, city])
+}
+
+model BusinessSource {
+  id                String     @id @default(cuid())
+  businessId        String
+  sourceType        SourceType
+  sourceUrl         String
+  extractedDataJson Json?
+  confidence        Float      @default(0.5)
+  createdAt         DateTime   @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+model WebsiteCheck {
+  id                     String        @id @default(cuid())
+  businessId             String
+  url                    String
+  status                 WebsiteStatus
+  httpStatus             Int?
+  loadsSuccessfully      Boolean       @default(false)
+  title                  String?
+  metaDescription        String?
+  detectedPlatform       String?
+  screenshotDesktopUrl   String?
+  screenshotMobileUrl    String?
+  screenshotAboveFoldUrl String?
+  visualQualityScore     Int           @default(0)
+  conversionScore        Int           @default(0)
+  trustScore             Int           @default(0)
+  mobileCtaScore         Int           @default(0)
+  speedScore             Int           @default(0)
+  leadFunnelScore        Int           @default(0)
+  websiteQualityScore    Int           @default(0)
+  mainWeaknessesJson     Json?
+  positivesJson          Json?
+  auditJson              Json?
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+model AssetProfile {
+  id                 String   @id @default(cuid())
+  businessId         String
+  logoUrl            String?
+  assetQualityScore  Int      @default(0)
+  fallbackNeeded     Boolean  @default(true)
+  assetsJson         Json?
+  rejectedAssetsJson Json?
+  screenshotsJson    Json?
+  notes              String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+model LeadScore {
+  id                     String       @id @default(cuid())
+  businessId             String
+  businessValueScore     Int          @default(0)
+  websiteWeaknessScore   Int          @default(0)
+  demoOpportunityScore   Int          @default(0)
+  outreachReadinessScore Int          @default(0)
+  finalLeadScore         Int          @default(0)
+  priority               LeadPriority @default(low)
+  scoreBreakdownJson     Json?
+  reason                 String?
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([priority])
+}
+
+model CompetitorScan {
+  id                   String   @id @default(cuid())
+  businessId           String
+  competitorsJson      Json?
+  competitorGapSummary String?
+  differentiationAngle String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+model BusinessIntelligencePacket {
+  id         String   @id @default(cuid())
+  businessId String
+  packetJson Json
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+model DemoConfig {
+  id               String           @id @default(cuid())
+  businessId       String
+  slug             String           @unique
+  baseConfigJson   Json
+  status           DemoConfigStatus @default(draft)
+  winningVersionId String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  business         Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  versions         DemoVersion[]
+  outreachMessages OutreachMessage[]
+  reviewQueueItems ReviewQueueItem[]
+
+  @@index([businessId])
+}
+
+model DemoVersion {
+  id                   String            @id @default(cuid())
+  demoConfigId         String
+  businessId           String
+  versionNumber        Int
+  demoConfigJson       Json
+  desktopScreenshotUrl String?
+  mobileScreenshotUrl  String?
+  totalScore           Int               @default(0)
+  scoreBreakdownJson   Json?
+  criticNotesJson      Json?
+  improvementPlanJson  Json?
+  configPatchJson      Json?
+  status               DemoVersionStatus @default(draft)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  demoConfig DemoConfig @relation(fields: [demoConfigId], references: [id], onDelete: Cascade)
+  business   Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([demoConfigId, versionNumber])
+  @@index([businessId])
+}
+
+model OutreachMessage {
+  id            String   @id @default(cuid())
+  businessId    String
+  demoConfigId  String?
+  smsText       String
+  emailSubject  String
+  emailBody     String
+  instagramDm   String
+  callScript    String
+  followUp1     String
+  followUp2     String
+  contactReason String
+  createdAt     DateTime @default(now())
+
+  business   Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  demoConfig DemoConfig? @relation(fields: [demoConfigId], references: [id], onDelete: SetNull)
+
+  @@index([businessId])
+}
+
+model ReviewQueueItem {
+  id            String       @id @default(cuid())
+  businessId    String
+  demoConfigId  String
+  status        ReviewStatus @default(pending)
+  reviewerNotes String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  business   Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  demoConfig DemoConfig @relation(fields: [demoConfigId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([businessId])
+}

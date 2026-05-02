@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: funnel_radar
+    ports:
+      - "5432:5432"
+    volumes:
+      - funnel_radar_pg:/var/lib/postgresql/data
+
+volumes:
+  funnel_radar_pg:
