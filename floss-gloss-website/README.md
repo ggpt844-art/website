@@ -10,7 +10,11 @@ npm install
 npm run dev
 ```
 
-Open **http://localhost:3333** (port **3333** so it never collides with the main app on 3000).
+Open **http://localhost:3333**
+
+### Hero photo
+
+Drop your practice exterior at **`public/hero-storefront.png`** (replaces the default). It is referenced as `/hero-storefront.png` in `components/Hero.tsx`. (port **3333** so it never collides with the main app on 3000).
 
 ## Optional hero video
 

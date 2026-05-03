@@ -175,23 +175,39 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Treatments — dense premium list */}
-      <section id="treatments" className="bg-navy py-20 text-white md:py-28">
+      {/* Treatments — inline colors so dark band never renders as "ghost" on light bg */}
+      <section
+        id="treatments"
+        className="py-20 md:py-28"
+        style={{ backgroundColor: "#0a1628", color: "#ffffff" }}
+      >
         <div className="mx-auto max-w-6xl px-6">
           <div className="md:flex md:items-end md:justify-between md:gap-12">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-gold">Clinical focus</p>
-              <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight md:text-[2.75rem]">
+              <p
+                className="text-[11px] font-bold uppercase tracking-[0.28em]"
+                style={{ color: "#c4a574" }}
+              >
+                Clinical focus
+              </p>
+              <h2
+                className="mt-3 font-display text-4xl font-semibold tracking-tight md:text-[2.75rem]"
+                style={{ color: "#ffffff" }}
+              >
                 Treatments &amp; advanced care
               </h2>
-              <p className="mt-4 max-w-xl text-white/55">
+              <p className="mt-4 max-w-xl" style={{ color: "rgba(255,255,255,0.82)" }}>
                 A sample clinical menu — align with your Chart of Services and regulatory copy
                 before launch.
               </p>
             </div>
             <a
               href="#book"
-              className="mt-8 inline-flex shrink-0 self-start rounded-sm border border-white/25 px-7 py-3.5 text-xs font-bold uppercase tracking-widest text-white transition hover:border-gold/50 hover:text-gold md:mt-0"
+              className="mt-8 inline-flex shrink-0 self-start rounded-sm border-2 px-7 py-3.5 text-xs font-bold uppercase tracking-widest transition md:mt-0"
+              style={{
+                borderColor: "rgba(255,255,255,0.55)",
+                color: "#ffffff",
+              }}
             >
               Request a consult
             </a>
@@ -200,7 +216,11 @@ export default function HomePage() {
             {TREATMENTS.map((t) => (
               <li
                 key={t}
-                className="border-l-2 border-gold/45 py-1 pl-4 text-sm text-white/78"
+                className="border-l-2 py-2 pl-4 text-sm"
+                style={{
+                  borderLeftColor: "#c4a574",
+                  color: "rgba(255,255,255,0.92)",
+                }}
               >
                 {t}
               </li>
