@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f4f9fa;
+  --text: #0c1520;
+  --muted: #4a5f66;
+  --card: rgba(255, 255, 255, 0.86);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  color: var(--text);
+  background: var(--bg);
+}
