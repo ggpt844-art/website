@@ -13,7 +13,10 @@ import { PhotoUploadQuoteFlow } from "./PhotoUploadQuoteFlow";
 import { FAQSection } from "./FAQSection";
 import { FinalCTA } from "./FinalCTA";
 import { StickyMobileCTA } from "./StickyMobileCTA";
-import { useEffect } from "react";
+import { CustomNicheSection } from "./CustomNicheSection";
+import { DemoAnalytics, trackDemoEvent } from "./DemoAnalytics";
+import { GrowthContentBlocks } from "./GrowthContentBlocks";
+import { Fragment } from "react";
 
 const SECTION_MAP: Record<
   string,
@@ -29,24 +32,34 @@ const SECTION_MAP: Record<
   photoUploadQuoteFlow: PhotoUploadQuoteFlow,
   faq: FAQSection,
   finalCTA: FinalCTA,
+  customNiche: CustomNicheSection,
 };
 
 export function DemoRenderer({ config }: { config: DemoConfig }) {
-  useEffect(() => {
-    document.documentElement.setAttribute("data-demo-theme", config.design.designSystem);
-    return () => {
-      document.documentElement.removeAttribute("data-demo-theme");
-    };
-  }, [config.design.designSystem]);
+  const archetype = config.pageStrategy?.flowArchetype;
 
   return (
-    <div className="demo-root min-h-screen font-body antialiased">
-      <DemoThemeStyle designSystem={config.design.designSystem} />
-      {config.sections.map((s) => {
+    <div
+      className="demo-root min-h-screen font-body antialiased"
+      data-demo-theme={config.design.designSystem}
+      data-flow-archetype={archetype ?? undefined}
+    >
+      <DemoThemeStyle
+        designSystem={config.design.designSystem}
+        visualDirection={config.visualDirection}
+      />
+      <DemoAnalytics slug={config.slug} />
+      {config.sections.map((s, i) => {
         const Cmp = SECTION_MAP[s];
-        return Cmp ? <Cmp key={s} config={config} /> : null;
+        const insertGrowthAfter = i === Math.max(0, config.sections.indexOf("trustStrip"));
+        return (
+          <Fragment key={s}>
+            {Cmp ? <Cmp config={config} /> : null}
+            {insertGrowthAfter && <GrowthContentBlocks config={config} />}
+          </Fragment>
+        );
       })}
-      <StickyMobileCTA config={config} />
+      <StickyMobileCTA config={config} trackEvent={(type, extra) => trackDemoEvent(config.slug, type, extra)} />
       <footer className="border-t border-[var(--border)] py-10 text-center text-xs text-[var(--text-dim)]">
         Demo for {config.business.name} · Built by Local Funnel Radar · Sample
         data only — not affiliated with the business unless approved.

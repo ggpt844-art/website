@@ -33,3 +33,54 @@ html, body {
   background: rgba(77, 139, 255, 0.4);
   color: #fff;
 }
+
+/* Cinematic thermal hero — slow colormap breathe + scan shimmer */
+@keyframes thermal-drift {
+  0%,
+  100% {
+    opacity: 0.28;
+    filter: saturate(1.03) hue-rotate(0deg);
+  }
+  50% {
+    opacity: 0.36;
+    filter: saturate(1.08) hue-rotate(3deg);
+  }
+}
+
+.thermal-drift {
+  animation: thermal-drift 14s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thermal-drift {
+    animation: none;
+    opacity: 0.3;
+  }
+}
+
+@keyframes thermal-scan-y {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 0% 100%;
+  }
+}
+
+.thermal-scanlines {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.03) 2px,
+    rgba(255, 255, 255, 0.03) 3px
+  );
+  background-size: 100% 120%;
+  animation: thermal-scan-y 18s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thermal-scanlines {
+    animation: none;
+  }
+}

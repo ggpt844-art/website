@@ -18,14 +18,15 @@ function ToothOrb({ accent, reducedMotion }: { accent: string; reducedMotion?: b
       <mesh ref={ref}>
         <sphereGeometry args={[1.4, 64, 64]} />
         <meshPhysicalMaterial
-          color="#ffffff"
-          metalness={0.05}
-          roughness={0.05}
+          color="#f8fafc"
+          metalness={0.04}
+          roughness={0.045}
           clearcoat={1}
-          clearcoatRoughness={0.02}
-          transmission={0.4}
+          clearcoatRoughness={0.025}
+          transmission={0.42}
           thickness={1}
-          ior={1.5}
+          ior={1.52}
+          envMapIntensity={1.2}
           attenuationColor={accent}
         />
       </mesh>
@@ -46,9 +47,21 @@ export function ToothOrbScene({
   accentColor = "#2563eb",
   backgroundColor = "transparent",
   reducedMotion = false,
+  quality = "high",
+  lightingPreset,
+  cameraSpec,
+  isMobile,
 }: SceneProps) {
   return (
-    <SceneCanvas background={backgroundColor} cameraZ={5}>
+    <SceneCanvas
+      background={backgroundColor}
+      cameraZ={5}
+      cameraSpec={cameraSpec}
+      reducedMotion={reducedMotion}
+      isMobile={isMobile}
+      lightingPreset={lightingPreset}
+      quality={quality}
+    >
       <ToothOrb accent={accentColor} reducedMotion={reducedMotion} />
       <SmileArc accent={accentColor} />
       <Sparkles count={reducedMotion ? 30 : 60} scale={5} size={1.5} speed={0.2} color={accentColor} />

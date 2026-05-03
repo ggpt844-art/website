@@ -6,6 +6,7 @@ const NAV = [
   { href: "/targets", label: "Targets" },
   { href: "/discover", label: "Discover" },
   { href: "/review-queue", label: "Review Queue" },
+  { href: "/leads", label: "Leads" },
 ];
 
 export function DashboardShell({

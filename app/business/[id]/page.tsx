@@ -1,11 +1,33 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { DashboardShell } from "@/components/dashboard/Shell";
 import { jobRegistry } from "@/lib/jobs/runner";
 import { registerAllJobs } from "@/lib/jobs/register";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import {
+  AiSearchGrowthPanel,
+  ConversionGrowthPanel,
+  GbpNapPanel,
+  SeoGrowthPanel,
+  TabBar,
+  TrustCompliancePanel,
+} from "@/components/business/GrowthPanels";
+import {
+  CaseStudyPanel,
+  LaunchChecklistPanel,
+  LeadOpsPanel,
+  OutreachPanel,
+  ReportsPanel,
+} from "@/components/business/BusinessGrowthForms";
+import type { DemoConfig } from "@/lib/renderer/demoConfig";
+import { DesignWorkflowDashboard } from "@/components/design-workflow/DesignWorkflowDashboard";
+import { IntraNicheStrategyPanel } from "@/components/business/IntraNicheStrategyPanel";
+import { APP_CONFIG } from "@/lib/utils/config";
+import { getNichePreset } from "@/lib/presets/niches";
+import { ensureLaunchChecklist } from "@/lib/launch/dbLaunchChecklist";
+import { analyzeCroFromEventCounts } from "@/lib/cro/croAnalyzer";
 
 registerAllJobs();
 export const dynamic = "force-dynamic";
@@ -39,6 +61,11 @@ async function setNotes(formData: FormData) {
 async function approveDemo(formData: FormData) {
   "use server";
   const demoConfigId = String(formData.get("demoConfigId"));
+  const row = await prisma.demoConfig.findUnique({
+    where: { id: demoConfigId },
+    select: { baseConfigJson: true, businessId: true },
+  });
+  if (!row) redirect("/review-queue");
   await prisma.demoConfig.update({
     where: { id: demoConfigId },
     data: { status: "approved" },
@@ -46,7 +73,13 @@ async function approveDemo(formData: FormData) {
   redirect("/review-queue");
 }
 
-export default async function BusinessPage({ params }: { params: { id: string } }) {
+export default async function BusinessPage({
+  params,
+  searchParams,
+}: {
+  params: { id: string };
+  searchParams: { tab?: string; approvalBlocked?: string };
+}) {
   const business = await prisma.business.findUnique({
     where: { id: params.id },
     include: {
@@ -67,14 +100,221 @@ export default async function BusinessPage({ params }: { params: { id: string } 
   });
   if (!business) notFound();
 
+  const tab = typeof searchParams.tab === "string" ? searchParams.tab : "overview";
+  const approvalBlocked = searchParams.approvalBlocked === "1";
+  const demoCfg = business.demoConfigs[0]?.baseConfigJson as unknown as DemoConfig | undefined;
+
+  const [leadGroups, eventGroups] =
+    tab === "leads" || tab === "analytics" || tab === "reports"
+      ? await Promise.all([
+          prisma.crmLead.groupBy({
+            by: ["status"],
+            where: { businessId: business.id },
+            _count: true,
+          }),
+          prisma.analyticsEvent.groupBy({
+            by: ["eventType"],
+            where: { businessId: business.id },
+            _count: true,
+          }),
+        ])
+      : [[], []];
+
+  const eventCounts: Record<string, number> = {};
+  for (const g of eventGroups) eventCounts[g.eventType] = g._count;
+  const croAnalysis = analyzeCroFromEventCounts(eventCounts, demoCfg ?? null);
+
+  type LeadNotificationRow = Prisma.LeadNotificationGetPayload<{
+    include: { lead: { select: { id: true; name: true } } };
+  }>;
+  type FollowUpTaskRow = Prisma.FollowUpTaskGetPayload<{
+    include: { lead: { select: { id: true; name: true } } };
+  }>;
+
+  let launchChecklist: Awaited<ReturnType<typeof ensureLaunchChecklist>> | null = null;
+  let outreachContacts: Awaited<ReturnType<typeof prisma.outreachContact.findMany>> = [];
+  let caseStudies: Awaited<ReturnType<typeof prisma.caseStudy.findMany>> = [];
+  let growthReports: Awaited<ReturnType<typeof prisma.growthReport.findMany>> = [];
+  let leadNotifications: LeadNotificationRow[] = [];
+  let followUpTasks: FollowUpTaskRow[] = [];
+
+  if (tab === "launch") {
+    launchChecklist = await ensureLaunchChecklist(business.id);
+  }
+  if (tab === "outreach") {
+    outreachContacts = await prisma.outreachContact.findMany({
+      where: { businessId: business.id },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    });
+  }
+  if (tab === "case-study") {
+    caseStudies = await prisma.caseStudy.findMany({
+      where: { businessId: business.id },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+    });
+  }
+  if (tab === "reports") {
+    growthReports = await prisma.growthReport.findMany({
+      where: { businessId: business.id },
+      orderBy: { createdAt: "desc" },
+      take: 25,
+    });
+  }
+  if (tab === "leads") {
+    [leadNotifications, followUpTasks] = await Promise.all([
+      prisma.leadNotification.findMany({
+        where: { businessId: business.id, status: "pending", type: "dashboard_alert" },
+        include: { lead: { select: { id: true, name: true } } },
+        orderBy: { createdAt: "desc" },
+        take: 30,
+      }),
+      prisma.followUpTask.findMany({
+        where: { businessId: business.id, status: "pending" },
+        include: { lead: { select: { id: true, name: true } } },
+        orderBy: { dueAt: "asc" },
+        take: 40,
+      }),
+    ]);
+  }
+
   const wc = business.websiteChecks[0];
   const score = business.leadScores[0];
   const demo = business.demoConfigs[0];
   const outreach = business.outreachMessages[0];
   const ap = business.assetProfiles[0];
 
+  let designVariants: Awaited<ReturnType<typeof prisma.designVariant.findMany>> = [];
+  let designReferences: Awaited<ReturnType<typeof prisma.designReference.findMany>> = [];
+  if (tab === "design-workflow") {
+    designVariants = demo
+      ? await prisma.designVariant.findMany({
+          where: { demoConfigId: demo.id },
+          orderBy: { createdAt: "desc" },
+        })
+      : [];
+    designReferences = await prisma.designReference.findMany({
+      where: { businessId: business.id },
+      orderBy: { createdAt: "desc" },
+      take: 40,
+    });
+  }
+
   return (
     <DashboardShell title={business.name} subtitle={`${business.city} · ${business.niche}`}>
+      <TabBar businessId={business.id} tab={tab} />
+
+      {tab === "strategy" && (
+        <IntraNicheStrategyPanel
+          businessId={business.id}
+          demoConfigId={demo?.id ?? null}
+          config={demoCfg ?? null}
+          approvalBlocked={approvalBlocked}
+        />
+      )}
+
+      {tab === "seo" && <SeoGrowthPanel config={demoCfg ?? null} />}
+      {tab === "ai-search" && <AiSearchGrowthPanel config={demoCfg ?? null} />}
+      {tab === "conversion" && <ConversionGrowthPanel config={demoCfg ?? null} />}
+      {tab === "trust" && <TrustCompliancePanel config={demoCfg ?? null} />}
+      {tab === "gbp" && <GbpNapPanel config={demoCfg ?? null} />}
+      {tab === "launch" && launchChecklist && (
+        <LaunchChecklistPanel
+          checklist={launchChecklist}
+          businessId={business.id}
+          demoPath={demo ? `/demo/${demo.slug}` : null}
+        />
+      )}
+
+      {tab === "leads" && (
+        <div className="space-y-6 text-sm">
+          <LeadOpsPanel
+            businessId={business.id}
+            notifications={leadNotifications}
+            tasks={followUpTasks}
+          />
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+            <p className="text-[11px] uppercase tracking-wider text-white/50">Pipeline</p>
+            <ul className="mt-3 space-y-1 text-white/75">
+              {leadGroups.map((g) => (
+                <li key={g.status}>
+                  · {g.status}: {g._count}
+                </li>
+              ))}
+            </ul>
+            <Link
+              href={`/leads?businessId=${business.id}`}
+              className="mt-4 inline-block text-sm underline text-white/70"
+            >
+              Open full CRM →
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {tab === "analytics" && (
+        <div className="space-y-6">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 text-sm">
+            <p className="text-[11px] uppercase tracking-wider text-white/50">CRO (rule-based)</p>
+            <p className="mt-2 font-display text-3xl">{croAnalysis.croScore}</p>
+            <ul className="mt-3 space-y-1 text-xs text-white/65">
+              {croAnalysis.funnelNotes.map((n) => (
+                <li key={n}>{n}</li>
+              ))}
+            </ul>
+            <p className="mt-4 text-[11px] uppercase tracking-wider text-white/50">Recommendations</p>
+            <ul className="mt-2 space-y-1 text-xs text-white/70">
+              {croAnalysis.recommendations.map((r) => (
+                <li key={r}>· {r}</li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 text-sm">
+            <p className="text-[11px] uppercase tracking-wider text-white/50">Events (all time)</p>
+            <ul className="mt-3 max-h-64 overflow-auto text-xs text-white/70">
+              {eventGroups
+                .slice()
+                .sort((a, b) => b._count - a._count)
+                .map((g) => (
+                  <li key={g.eventType} className="flex justify-between gap-4 border-b border-white/5 py-1">
+                    <span>{g.eventType}</span>
+                    <span>{g._count}</span>
+                  </li>
+                ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {tab === "reports" && <ReportsPanel businessId={business.id} reports={growthReports} />}
+
+      {tab === "outreach" && (
+        <OutreachPanel
+          businessId={business.id}
+          contacts={outreachContacts}
+          businessName={business.name}
+          demoPath={demo ? `/demo/${demo.slug}` : null}
+        />
+      )}
+
+      {tab === "case-study" && <CaseStudyPanel businessId={business.id} studies={caseStudies} />}
+
+      {tab === "design-workflow" && (
+        <DesignWorkflowDashboard
+          businessId={business.id}
+          demoConfigId={demo?.id ?? null}
+          config={demoCfg ?? null}
+          variants={designVariants}
+          references={designReferences}
+          hasIntelligencePacket={!!business.intelligencePackets[0]}
+          stitchSdkEnabled={APP_CONFIG.enableStitchSdk && Boolean(process.env.STITCH_API_KEY)}
+          nicheLabel={getNichePreset(business.niche).label}
+          stitchMinAutoScore={APP_CONFIG.stitchPromptMinAutoScore}
+        />
+      )}
+
+      {tab === "overview" && (
       <div className="grid gap-8 lg:grid-cols-[1.6fr_1fr]">
         <div className="space-y-8">
           <Card title="Identity">
@@ -180,7 +420,7 @@ export default async function BusinessPage({ params }: { params: { id: string } 
                     href={`/demo-dashboard/${demo.slug}`}
                     className="rounded-full border border-white/10 px-4 py-1.5 text-sm hover:bg-white/5"
                   >
-                    Lead dashboard mock →
+                    Lead dashboard →
                   </Link>
                 </div>
                 <table className="w-full text-sm">
@@ -215,6 +455,11 @@ export default async function BusinessPage({ params }: { params: { id: string } 
                     Approve & send to review queue
                   </button>
                 </form>
+                {demoCfg?.intraNicheDifferentiationMeta?.blocksApproval ? (
+                  <p className="text-xs text-accent-orange">
+                    Intra-niche QA is blocking approval — open the Strategy tab to adjust or rebuild.
+                  </p>
+                ) : null}
               </div>
             )}
           </Card>
@@ -261,6 +506,8 @@ export default async function BusinessPage({ params }: { params: { id: string } 
           </Card>
         </div>
       </div>
+      )}
+
     </DashboardShell>
   );
 }

@@ -67,10 +67,21 @@ export function AirflowHomeScene({
   backgroundColor = "transparent",
   reducedMotion = false,
   quality = "high",
+  lightingPreset,
+  cameraSpec,
+  isMobile,
 }: SceneProps) {
   const count = quality === "low" ? 60 : quality === "medium" ? 110 : 180;
   return (
-    <SceneCanvas background={backgroundColor} cameraZ={6}>
+    <SceneCanvas
+      background={backgroundColor}
+      cameraZ={6}
+      cameraSpec={cameraSpec}
+      reducedMotion={reducedMotion}
+      isMobile={isMobile}
+      lightingPreset={lightingPreset}
+      quality={quality}
+    >
       <HouseSilhouette />
       <AirStream count={count} accent={accentColor} reducedMotion={reducedMotion} />
       <AirStream count={Math.round(count * 0.5)} accent={accentColor} warm reducedMotion={reducedMotion} />

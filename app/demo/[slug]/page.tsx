@@ -1,9 +1,41 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/db/prisma";
+import type { Metadata } from "next";
 import { DemoRenderer } from "@/components/demo/DemoRenderer";
-import type { DemoConfig } from "@/lib/renderer/demoConfig";
+import { resolveDemoConfigFromSlug } from "@/lib/demo/resolveDemoConfig";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Promise<Metadata> {
+  const resolved = await resolveDemoConfigFromSlug(params.slug);
+  if (!resolved) {
+    return { title: "Demo" };
+  }
+  const { config } = resolved;
+  const seo = "seo" in config ? config.seo : undefined;
+  if (!seo) {
+    return {
+      title: `${config.business.name} — preview`,
+    };
+  }
+  const noindex = seo.seoIndexingMode === "demo_noindex";
+  return {
+    title: seo.titleTag,
+    description: seo.metaDescription,
+    alternates: seo.canonicalUrl ? { canonical: seo.canonicalUrl } : undefined,
+    openGraph: {
+      title: seo.openGraphTitle,
+      description: seo.openGraphDescription,
+      images: seo.openGraphImage ? [seo.openGraphImage] : undefined,
+    },
+    robots: noindex
+      ? { index: false, follow: false, googleBot: { index: false, follow: false } }
+      : { index: true, follow: true },
+  };
+}
 
 export default async function DemoPage({
   params,
@@ -12,22 +44,13 @@ export default async function DemoPage({
   params: { slug: string };
   searchParams: { version?: string };
 }) {
-  const demo = await prisma.demoConfig.findUnique({
-    where: { slug: params.slug },
-    include: { versions: { orderBy: { versionNumber: "asc" } } },
+  const resolved = await resolveDemoConfigFromSlug(params.slug, {
+    versionNumber:
+      searchParams.version != null && searchParams.version !== ""
+        ? Number(searchParams.version)
+        : undefined,
   });
-  if (!demo) notFound();
+  if (!resolved) notFound();
 
-  let config = demo.baseConfigJson as unknown as DemoConfig;
-  if (searchParams.version) {
-    const v = demo.versions.find(
-      (vv) => vv.versionNumber === Number(searchParams.version),
-    );
-    if (v) config = v.demoConfigJson as unknown as DemoConfig;
-  } else if (demo.winningVersionId) {
-    const winner = demo.versions.find((v) => v.id === demo.winningVersionId);
-    if (winner) config = winner.demoConfigJson as unknown as DemoConfig;
-  }
-
-  return <DemoRenderer config={config} />;
+  return <DemoRenderer config={resolved.config} />;
 }

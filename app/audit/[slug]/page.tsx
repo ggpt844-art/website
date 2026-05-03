@@ -54,6 +54,67 @@ export default async function AuditPage({ params }: { params: { slug: string } }
 
         <section className="mt-8 rounded-2xl border border-white/10 bg-white/[0.02] p-6">
           <p className="text-[11px] uppercase tracking-[0.18em] text-white/50">
+            Lead capture system
+          </p>
+          <ul className="mt-3 space-y-2 text-sm text-white/70">
+            <li>· Guided diagnostic or quote flow with optional photo upload</li>
+            <li>· Lead scoring + priority from answers (internal CRM)</li>
+            <li>· Smart thank-you route with niche copy</li>
+            <li>· Sticky mobile CTA + tracked events</li>
+          </ul>
+          <p className="mt-4 text-xs text-white/50">
+            Designed to capture better-qualified quote requests, not bare contact forms.
+          </p>
+        </section>
+
+        <section className="mt-8 rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-white/50">
+            Local SEO foundation
+          </p>
+          {"seo" in config && config.seo ? (
+            <ul className="mt-3 space-y-2 text-sm text-white/70">
+              <li>· SEO foundation score: {config.seo.seoFoundationScore} / 100</li>
+              <li>· Metadata, headings, and JSON-LD aligned to visible content</li>
+              <li>· Demo stays noindex until you launch as client-indexable</li>
+            </ul>
+          ) : (
+            <p className="mt-3 text-sm text-white/50">Regenerate demo for full SEO layer.</p>
+          )}
+        </section>
+
+        <section className="mt-8 rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-white/50">
+            AI search readiness
+          </p>
+          {"aiSearch" in config && config.aiSearch ? (
+            <>
+              <p className="mt-3 text-sm text-white/70">
+                AI Search score: {config.aiSearch.aiSearchScore} / 100 — entity summaries, direct
+                answers, crawler policy, and optional llms.txt for client launches.
+              </p>
+              <p className="mt-3 text-xs text-white/50">
+                This does not guarantee placement in AI answers — it improves clarity for search and
+                answer systems.
+              </p>
+            </>
+          ) : (
+            <p className="mt-3 text-sm text-white/50">Regenerate demo for AI search layer.</p>
+          )}
+        </section>
+
+        <section className="mt-8 rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-white/50">
+            Growth system
+          </p>
+          <ul className="mt-3 space-y-2 text-sm text-white/70">
+            <li>· CRM inbox + analytics events on demo visits</li>
+            <li>· Bi-weekly snapshot report by date range</li>
+            <li>· Launch checklist for handoff</li>
+          </ul>
+        </section>
+
+        <section className="mt-8 rounded-2xl border border-white/10 bg-white/[0.02] p-6">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-white/50">
             New demo version
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -67,7 +128,7 @@ export default async function AuditPage({ params }: { params: { slug: string } }
               href={`/demo-dashboard/${demo.slug}`}
               className="rounded-full border border-white/10 px-5 py-2.5 text-sm hover:bg-white/5"
             >
-              See the lead dashboard mock →
+              See the lead dashboard →
             </Link>
           </div>
           <Bullets

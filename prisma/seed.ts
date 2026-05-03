@@ -4,6 +4,7 @@ import { buildDemoConfig } from "../lib/renderer/buildDemoConfig";
 import { gradeDemo, applyConfigPatch } from "../lib/qa/critic";
 import { writeOutreach } from "../lib/agents/outreachWriter";
 import { slugify } from "../lib/utils/slug";
+import { APP_CONFIG } from "../lib/utils/config";
 
 const prisma = new PrismaClient();
 
@@ -162,7 +163,7 @@ async function seedSamples() {
       },
     });
 
-    const config = buildDemoConfig({
+    const config = await buildDemoConfig({
       businessName: b.name,
       city: b.city,
       niche: b.niche,
@@ -173,6 +174,7 @@ async function seedSamples() {
       websiteUrl: b.websiteUrl,
       weaknesses: s.weaknesses,
       slugOverride: b.slug,
+      recentSameNicheFingerprints: [],
     });
 
     const demo = await prisma.demoConfig.create({
@@ -231,7 +233,7 @@ async function seedSamples() {
     await prisma.demoConfig.update({
       where: { id: demo.id },
       data: {
-        status: bestScore >= 88 ? "approved" : "needs_manual_polish",
+        status: bestScore >= APP_CONFIG.minDemoScore ? "approved" : "needs_manual_polish",
         winningVersionId: bestVersionId ?? undefined,
       },
     });
@@ -260,7 +262,7 @@ async function seedSamples() {
       },
     });
 
-    if (bestScore >= 88) {
+    if (bestScore >= APP_CONFIG.minDemoScore) {
       await prisma.reviewQueueItem.upsert({
         where: { id: `${demo.id}-review` },
         create: {

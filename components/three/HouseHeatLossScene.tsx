@@ -65,10 +65,21 @@ export function HouseHeatLossScene({
   backgroundColor = "transparent",
   reducedMotion = false,
   quality = "high",
+  lightingPreset,
+  cameraSpec,
+  isMobile,
 }: SceneProps) {
   const count = quality === "low" ? 40 : quality === "medium" ? 90 : 160;
   return (
-    <SceneCanvas background={backgroundColor} cameraZ={6}>
+    <SceneCanvas
+      background={backgroundColor}
+      cameraZ={6}
+      cameraSpec={cameraSpec}
+      reducedMotion={reducedMotion}
+      isMobile={isMobile}
+      lightingPreset={lightingPreset}
+      quality={quality}
+    >
       <House accent={accentColor} />
       <HeatParticles count={count} accent={accentColor} reducedMotion={reducedMotion} />
     </SceneCanvas>

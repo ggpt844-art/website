@@ -1,5 +1,9 @@
 import { prisma } from "@/lib/db/prisma";
 import { fetchPage } from "@/lib/scraping/fetchPage";
+import {
+  extractBusinessContactFromFetchedPage,
+  mergeContactIntoBusinessUpdate,
+} from "@/lib/scraping/businessContactExtract";
 import { auditPage, emptyAudit } from "@/lib/audit/auditEngine";
 import { classifyWebsite } from "@/lib/discovery/classify";
 import { extractAssetCandidates, findInternalLinks, inferPageType } from "@/lib/assets/extract";
@@ -89,9 +93,20 @@ export async function runWebsiteVerificationJob({
     trustScore: audit.trustScore,
   });
 
+  const contact = extractBusinessContactFromFetchedPage(page);
+  const contactPatch = mergeContactIntoBusinessUpdate(
+    {
+      name: business.name,
+      phone: business.phone,
+      email: business.email,
+      address: business.address,
+    },
+    contact,
+  );
+
   await prisma.business.update({
     where: { id: businessId },
-    data: { websiteStatus: status },
+    data: { websiteStatus: status, ...contactPatch },
   });
 
   await prisma.websiteCheck.create({

@@ -83,6 +83,92 @@ enum SourceType {
   manual
 }
 
+enum PackageTier {
+  starter
+  growth
+  premium
+}
+
+enum CrmLeadStatus {
+  new
+  contacted
+  booked
+  sold
+  lost
+  spam
+}
+
+enum NotificationChannel {
+  email
+  sms
+  dashboard_alert
+  auto_reply
+}
+
+enum NotificationSendStatus {
+  pending
+  sent
+  failed
+  skipped
+}
+
+enum FollowUpTaskStatus {
+  pending
+  done
+  skipped
+}
+
+enum GrowthReportStatus {
+  draft
+  reviewed
+  sent
+}
+
+enum LaunchChecklistStatus {
+  not_started
+  in_progress
+  completed
+}
+
+enum DesignReferenceSourceType {
+  stitch
+  manual
+  screenshot
+  code
+  other
+}
+
+enum DesignVariantType {
+  safe_conversion
+  premium_cinematic
+  bold_experimental
+  custom
+}
+
+enum CaseStudyStatus {
+  draft
+  published
+  archived
+}
+
+enum ConsentStatus {
+  unknown
+  implied
+  express
+  opted_out
+}
+
+enum OutreachContactStatus {
+  not_contacted
+  queued
+  contacted
+  replied
+  bounced
+  opted_out
+  won
+  lost
+}
+
 // ===== Models =====
 
 model TargetCity {
@@ -172,6 +258,16 @@ model Business {
   demoVersions        DemoVersion[]
   outreachMessages    OutreachMessage[]
   reviewQueueItems    ReviewQueueItem[]
+  analyticsEvents     AnalyticsEvent[]
+  crmLeads            CrmLead[]
+  growthReports       GrowthReport[]
+  launchChecklists    LaunchChecklist[]
+  caseStudies         CaseStudy[]
+  outreachContacts    OutreachContact[]
+  leadNotifications   LeadNotification[]
+  followUpTasks       FollowUpTask[]
+  designReferences    DesignReference[]
+  designVariants      DesignVariant[]
 
   @@index([niche, city])
   @@index([websiteStatus])
@@ -294,6 +390,7 @@ model DemoConfig {
   baseConfigJson   Json
   status           DemoConfigStatus @default(draft)
   winningVersionId String?
+  packageTier      PackageTier      @default(growth)
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
@@ -301,8 +398,60 @@ model DemoConfig {
   versions         DemoVersion[]
   outreachMessages OutreachMessage[]
   reviewQueueItems ReviewQueueItem[]
+  analyticsEvents  AnalyticsEvent[]
+  crmLeads         CrmLead[]
+  designReferences DesignReference[]
+  designVariants   DesignVariant[]
 
   @@index([businessId])
+}
+
+model DesignReference {
+  id                  String                   @id @default(cuid())
+  businessId          String
+  demoConfigId        String?
+  sourceType          DesignReferenceSourceType
+  rawText             String                   @db.Text
+  screenshotUrlsJson  Json?
+  codeSnippet         String?                  @db.Text
+  selectedVariantName String?
+  parsedReferenceJson Json?
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+
+  business    Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  demoConfig  DemoConfig?   @relation(fields: [demoConfigId], references: [id], onDelete: Cascade)
+  variants    DesignVariant[]
+
+  @@index([businessId])
+  @@index([demoConfigId])
+}
+
+model DesignVariant {
+  id                 String            @id @default(cuid())
+  businessId         String
+  demoConfigId       String
+  sourceReferenceId  String?
+  name               String
+  variantType        DesignVariantType
+  designMdJson       Json?
+  visualDirectionJson Json?
+  sceneSpecJson      Json?
+  pageStrategyJson   Json?
+  sectionOrderJson   Json?
+  score              Int               @default(0)
+  notes              String?           @db.Text
+  selected           Boolean           @default(false)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  business         Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  demoConfig       DemoConfig       @relation(fields: [demoConfigId], references: [id], onDelete: Cascade)
+  sourceReference  DesignReference? @relation(fields: [sourceReferenceId], references: [id], onDelete: SetNull)
+
+  @@index([businessId])
+  @@index([demoConfigId])
+  @@index([selected])
 }
 
 model DemoVersion {
@@ -363,4 +512,196 @@ model ReviewQueueItem {
 
   @@index([status])
   @@index([businessId])
+}
+
+model AnalyticsEvent {
+  id            String   @id @default(cuid())
+  businessId    String
+  demoConfigId  String?
+  leadId        String?
+  eventType     String
+  pagePath      String   @default("/")
+  deviceType    String?
+  trafficSource String?
+  referrer      String?
+  utmSource     String?
+  utmMedium     String?
+  utmCampaign   String?
+  ctaLabel      String?
+  stepId        String?
+  metadataJson  Json?
+  createdAt     DateTime @default(now())
+
+  business   Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  demoConfig DemoConfig? @relation(fields: [demoConfigId], references: [id], onDelete: SetNull)
+  crmLead    CrmLead?    @relation(fields: [leadId], references: [id], onDelete: SetNull)
+
+  @@index([businessId])
+  @@index([demoConfigId])
+  @@index([eventType])
+  @@index([createdAt])
+}
+
+model CrmLead {
+  id                    String         @id @default(cuid())
+  businessId            String
+  demoConfigId          String?
+  name                  String?
+  phone                 String?
+  email                 String?
+  serviceNeeded         String?
+  urgency               String?
+  city                  String?
+  address               String?
+  formAnswersJson       Json?
+  uploadedFilesJson     Json?
+  leadScore             Int            @default(0)
+  leadScoreReasonsJson  Json?
+  estimatedValueRange   String?
+  sourcePage            String?
+  trafficSource         String?
+  status                CrmLeadStatus  @default(new)
+  priority              LeadPriority   @default(warm)
+  notes                 String?
+  nextAction            String?
+  followUpDueAt         DateTime?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  business         Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  demoConfig       DemoConfig?        @relation(fields: [demoConfigId], references: [id], onDelete: SetNull)
+  notifications    LeadNotification[]
+  followUpTasks    FollowUpTask[]
+  analyticsEvents  AnalyticsEvent[]
+
+  @@index([businessId])
+  @@index([status])
+  @@index([priority])
+}
+
+model LeadNotification {
+  id        String                 @id @default(cuid())
+  leadId    String
+  businessId String
+  type      NotificationChannel
+  status    NotificationSendStatus @default(pending)
+  message   String
+  provider  String                 @default("none")
+  createdAt DateTime               @default(now())
+  sentAt    DateTime?
+
+  lead     CrmLead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([businessId])
+}
+
+model FollowUpTask {
+  id              String              @id @default(cuid())
+  leadId          String
+  businessId      String
+  taskType        String
+  dueAt           DateTime?
+  status          FollowUpTaskStatus  @default(pending)
+  messageTemplate String
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  lead     CrmLead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([businessId])
+}
+
+model GrowthReport {
+  id                String              @id @default(cuid())
+  businessId        String
+  periodStart       DateTime
+  periodEnd         DateTime
+  reportJson        Json
+  seoHealthScore        Int?
+  aiSearchScore         Int?
+  gbpHealthScore        Int?
+  napConsistencyScore Int?
+  croScore          Int?
+  leadSummaryJson   Json?
+  recommendationsJson Json?
+  status            GrowthReportStatus  @default(draft)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([periodStart, periodEnd])
+}
+
+model LaunchChecklist {
+  id           String                 @id @default(cuid())
+  businessId   String
+  demoConfigId String?
+  itemsJson    Json
+  status       LaunchChecklistStatus  @default(not_started)
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+model CaseStudy {
+  id                   String          @id @default(cuid())
+  businessId           String
+  title                String
+  beforeScreenshotUrl  String?
+  afterScreenshotUrl   String?
+  beforeScoresJson     Json?
+  afterScoresJson      Json?
+  leadMetricsJson      Json?
+  seoMetricsJson       Json?
+  aiSearchMetricsJson  Json?
+  testimonial          String?
+  caseStudyJson        Json
+  status               CaseStudyStatus @default(draft)
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+model OutreachContact {
+  id              String                @id @default(cuid())
+  businessId      String
+  name            String?
+  email           String?
+  phone           String?
+  sourceUrl       String?
+  consentStatus   ConsentStatus         @default(unknown)
+  outreachStatus  OutreachContactStatus @default(not_contacted)
+  lastContactedAt DateTime?
+  notes           String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([outreachStatus])
+}
+
+model SuppressionListEntry {
+  id        String   @id @default(cuid())
+  email     String?
+  domain    String?
+  phone     String?
+  reason    String
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([phone])
 }

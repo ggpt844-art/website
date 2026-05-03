@@ -14,18 +14,19 @@ function Sphere({ accent, reducedMotion }: { accent: string; reducedMotion?: boo
     ref.current.rotation.y += dt * 0.15;
   });
   return (
-    <Float floatIntensity={reducedMotion ? 0 : 1.2} speed={1.2}>
+    <Float floatIntensity={reducedMotion ? 0 : 0.75} speed={0.95}>
       <mesh ref={ref}>
         <sphereGeometry args={[1.5, 64, 64]} />
         <meshPhysicalMaterial
           color={accent}
-          metalness={0.2}
-          roughness={0.05}
+          metalness={0.12}
+          roughness={0.06}
           clearcoat={1}
-          clearcoatRoughness={0.05}
-          transmission={0.6}
-          thickness={1.2}
-          ior={1.4}
+          clearcoatRoughness={0.04}
+          transmission={0.58}
+          thickness={1.15}
+          ior={1.45}
+          envMapIntensity={1.25}
           attenuationColor={accent}
         />
       </mesh>
@@ -51,13 +52,32 @@ export function GlowSphereScene({
   accentColor = "#c97a8b",
   backgroundColor = "transparent",
   reducedMotion = false,
+  quality = "high",
+  lightingPreset,
+  cameraSpec,
+  isMobile,
 }: SceneProps) {
   return (
-    <SceneCanvas background={backgroundColor} cameraZ={5}>
+    <SceneCanvas
+      background={backgroundColor}
+      cameraZ={5}
+      cameraSpec={cameraSpec}
+      reducedMotion={reducedMotion}
+      isMobile={isMobile}
+      lightingPreset={lightingPreset}
+      quality={quality}
+    >
       <Sphere accent={accentColor} reducedMotion={reducedMotion} />
       <Ring accent={accentColor} radius={2.2} tilt={Math.PI / 3} reducedMotion={reducedMotion} />
       <Ring accent={accentColor} radius={2.6} tilt={Math.PI / 2.4} reducedMotion={reducedMotion} />
-      <Sparkles count={reducedMotion ? 40 : 120} scale={6} size={2.5} speed={0.3} color={accentColor} />
+      <Sparkles
+        count={reducedMotion ? 28 : quality === "low" ? 50 : 85}
+        scale={6}
+        size={2.1}
+        speed={0.26}
+        color={accentColor}
+        opacity={0.9}
+      />
     </SceneCanvas>
   );
 }

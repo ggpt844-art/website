@@ -50,6 +50,14 @@ export default async function ReviewQueuePage() {
           const score = it.business.leadScores[0];
           const top = it.demoConfig.versions[0];
           const weak = (wc?.mainWeaknessesJson as string[] | null)?.[0];
+          const cfg = it.demoConfig.baseConfigJson as {
+            seo?: { seoFoundationScore?: number };
+            aiSearch?: { aiSearchScore?: number };
+            package?: { tier?: string };
+          } | null;
+          const seoScore = cfg?.seo?.seoFoundationScore;
+          const aiScore = cfg?.aiSearch?.aiSearchScore;
+          const pkgTier = cfg?.package?.tier;
           return (
             <article
               key={it.id}
@@ -83,9 +91,12 @@ export default async function ReviewQueuePage() {
                 </span>
               </div>
 
-              <div className="mt-4 grid gap-4 sm:grid-cols-4">
+              <div className="mt-4 grid gap-4 sm:grid-cols-4 lg:grid-cols-7">
                 <Stat k="Lead score" v={score?.finalLeadScore ?? "—"} />
                 <Stat k="Demo score" v={top?.totalScore ?? "—"} />
+                <Stat k="SEO" v={seoScore ?? "—"} />
+                <Stat k="AI search" v={aiScore ?? "—"} />
+                <Stat k="Package" v={pkgTier ?? "—"} small />
                 <Stat
                   k="Difference"
                   v={

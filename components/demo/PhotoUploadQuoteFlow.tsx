@@ -1,20 +1,68 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import type { DemoConfig } from "@/lib/renderer/demoConfig";
 import type { QuoteFlowQuestion } from "@/lib/presets/types";
+import { trackDemoEvent } from "./DemoAnalytics";
 
 export function PhotoUploadQuoteFlow({ config }: { config: DemoConfig }) {
+  const router = useRouter();
   const flow = config.quoteFlow;
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [done, setDone] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const startedRef = useRef(false);
+
+  useEffect(() => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+    trackDemoEvent(config.slug, "quote_form_started");
+  }, [config.slug]);
+
+  const runSubmit = async (merged: Record<string, string>) => {
+    setIsSubmitting(true);
+    setSubmitError(null);
+    try {
+      const qs =
+        typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+      const res = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          slug: config.slug,
+          answers: merged,
+          sourcePage: typeof window !== "undefined" ? window.location.pathname : `/demo/${config.slug}`,
+          utmSource: qs?.get("utm_source") ?? undefined,
+          utmMedium: qs?.get("utm_medium") ?? undefined,
+          utmCampaign: qs?.get("utm_campaign") ?? undefined,
+          referrer: typeof document !== "undefined" ? document.referrer || undefined : undefined,
+        }),
+      });
+      const data = (await res.json()) as { ok?: boolean; thankYouPath?: string; error?: string };
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error ?? "request_failed");
+      }
+      const dest = data.thankYouPath ?? `/thank-you/${config.slug}`;
+      router.push(dest);
+    } catch {
+      setSubmitError("Could not submit right now. Check your connection and try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const next = (id: string, value: string) => {
-    setAnswers((a) => ({ ...a, [id]: value }));
-    if (step < flow.length - 1) setStep(step + 1);
-    else setDone(true);
+    const merged = { ...answers, [id]: value };
+    setAnswers(merged);
+    trackDemoEvent(config.slug, "diagnostic_step_completed", { stepId: id });
+    if (step < flow.length - 1) {
+      setStep(step + 1);
+      return;
+    }
+    void runSubmit(merged);
   };
 
   return (
@@ -62,41 +110,44 @@ export function PhotoUploadQuoteFlow({ config }: { config: DemoConfig }) {
             <div
               className="h-full transition-all"
               style={{
-                width: `${((done ? flow.length : step + 1) / flow.length) * 100}%`,
+                width: `${((isSubmitting ? flow.length : step + 1) / flow.length) * 100}%`,
                 background: config.design.accentColor,
               }}
             />
           </div>
           <AnimatePresence mode="wait">
-            {!done ? (
-              <motion.div
-                key={step}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.25 }}
-                className="mt-6"
-              >
-                <Step q={flow[step]} accent={config.design.accentColor} onAnswer={(v) => next(flow[step].id, v)} />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="done"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-8 rounded-2xl border border-[var(--border)] bg-black/20 p-6 text-center"
-              >
-                <p className="font-display text-2xl text-[var(--text)]">
-                  Sent — we'll reply within 24 hours.
-                </p>
-                <p className="mt-2 text-sm text-[var(--text-dim)]">
-                  This is a demo flow — answers aren't actually submitted.
-                </p>
-                <pre className="mt-4 max-h-40 overflow-auto rounded-xl bg-black/30 p-3 text-left text-[11px] text-[var(--text-dim)]">
-                  {JSON.stringify(answers, null, 2)}
-                </pre>
-              </motion.div>
-            )}
+            <motion.div
+              key={step}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25 }}
+              className="mt-6"
+            >
+              {submitError ? (
+                <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-center text-sm text-[var(--text)]">
+                  <p>{submitError}</p>
+                  <button
+                    type="button"
+                    onClick={() => setSubmitError(null)}
+                    className="mt-4 rounded-full border border-[var(--border)] px-4 py-2 text-xs hover:bg-black/20"
+                  >
+                    Try again
+                  </button>
+                </div>
+              ) : isSubmitting ? (
+                <div className="py-12 text-center text-sm text-[var(--text-dim)]">
+                  Sending your request…
+                </div>
+              ) : (
+                <Step
+                  q={flow[step]}
+                  accent={config.design.accentColor}
+                  slug={config.slug}
+                  onAnswer={(v) => next(flow[step].id, v)}
+                />
+              )}
+            </motion.div>
           </AnimatePresence>
         </div>
       </div>
@@ -107,10 +158,12 @@ export function PhotoUploadQuoteFlow({ config }: { config: DemoConfig }) {
 function Step({
   q,
   accent,
+  slug,
   onAnswer,
 }: {
   q: QuoteFlowQuestion;
   accent: string;
+  slug: string;
   onAnswer: (v: string) => void;
 }) {
   if (q.type === "choice" && q.options) {
@@ -144,9 +197,12 @@ function Step({
             type="file"
             accept="image/*"
             className="sr-only"
-            onChange={(e) =>
-              onAnswer(e.target.files?.[0]?.name ?? "photo-attached")
-            }
+            onChange={(e) => {
+              trackDemoEvent(slug, "photo_upload_clicked");
+              const name = e.target.files?.[0]?.name ?? "photo-attached";
+              trackDemoEvent(slug, "photo_uploaded", { metadata: { file: name } });
+              onAnswer(name);
+            }}
           />
         </label>
         <button

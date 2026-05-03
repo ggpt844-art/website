@@ -48,9 +48,21 @@ export function TerrainLayersScene({
   accentColor = "#39d98a",
   backgroundColor = "transparent",
   reducedMotion = false,
+  quality = "high",
+  lightingPreset,
+  cameraSpec,
+  isMobile,
 }: SceneProps) {
   return (
-    <SceneCanvas background={backgroundColor} cameraZ={5}>
+    <SceneCanvas
+      background={backgroundColor}
+      cameraZ={5}
+      cameraSpec={cameraSpec}
+      reducedMotion={reducedMotion}
+      isMobile={isMobile}
+      lightingPreset={lightingPreset}
+      quality={quality}
+    >
       <TerrainStack accent={accentColor} reducedMotion={reducedMotion} />
     </SceneCanvas>
   );

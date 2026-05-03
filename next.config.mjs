@@ -3,6 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   experimental: {
     serverActions: { bodySizeLimit: "5mb" },
+    serverComponentsExternalPackages: ["@google/stitch-sdk"],
   },
   images: {
     remotePatterns: [{ protocol: "https", hostname: "**" }],

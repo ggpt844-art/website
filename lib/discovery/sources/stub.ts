@@ -1,4 +1,5 @@
 import type { DiscoverySource, DiscoveredBusiness } from "../types";
+import { APP_CONFIG } from "@/lib/utils/config";
 
 // V1 deterministic stub source. Generates plausible local-business shapes for the
 // requested niche/city without hitting any external service. Replace later with
@@ -50,7 +51,7 @@ function seededRand(seed: string) {
 
 export const stubSource: DiscoverySource = {
   name: "stub",
-  available: true,
+  available: APP_CONFIG.enableStubDiscovery,
   rateLimitMs: 100,
   async search(ctx) {
     const rng = seededRand(`${ctx.city}-${ctx.niche}-${ctx.query}`);

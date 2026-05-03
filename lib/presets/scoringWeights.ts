@@ -19,9 +19,9 @@ export const QA_RUBRIC = {
 } as const;
 
 export const QA_HARD_PASS = {
-  total: 88,
-  premiumVisual: 17,
-  leadConversion: 17,
-  mobile: 8,
-  demoDifference: 8,
+  total: 80,
+  premiumVisual: 15,
+  leadConversion: 15,
+  mobile: 7,
+  demoDifference: 7,
 } as const;
