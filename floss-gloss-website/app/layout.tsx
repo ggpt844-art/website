@@ -41,7 +41,17 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en-CA" className={`${display.variable} ${sans.variable}`}>
-      <body className="min-h-screen bg-paper font-sans text-ink antialiased">{children}</body>
+      <body
+        className={`min-h-screen bg-paper text-ink antialiased ${sans.className}`}
+        style={{
+          minHeight: "100vh",
+          margin: 0,
+          background: "#f7f5f2",
+          color: "#0d1a1f",
+        }}
+      >
+        <div className="site-page">{children}</div>
+      </body>
     </html>
   );
 }

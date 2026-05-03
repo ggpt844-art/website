@@ -1,10 +1,19 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
-import { useEffect, useState } from "react";
+import Image from "next/image";
+import { useState } from "react";
+const NAVY = "#0a1628";
+const GOLD = "#c4a574";
 
-/** Local storefront — `public/hero-storefront.png` (replace anytime). */
-const LOCAL_HERO = "/hero-storefront.png";
+const HERO_CACHE_BUST =
+  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_HERO_BUST) || "10";
+
+const heroUrl = (path: string) => `${path}?v=${HERO_CACHE_BUST}`;
+
+/** Same order as before: listing photo hero, then optimize script JPEG, then PNG fallback */
+const HERO_PRIMARY = heroUrl("/map-google-listing.jpg");
+const HERO_LEGACY = heroUrl("/hero-cover.jpg");
+const HERO_SRC = heroUrl("/hero-storefront.png");
 
 export function Hero({
   headline,
@@ -21,101 +30,146 @@ export function Hero({
   kicker: string;
   trustLine: string;
 }) {
-  const reduceMotion = useReducedMotion();
-  const videoSrc =
-    (typeof process !== "undefined" && process.env.NEXT_PUBLIC_HERO_VIDEO_URL?.trim()) || "";
-  const [videoOk, setVideoOk] = useState(true);
-  const [videoVisible, setVideoVisible] = useState(false);
-  useEffect(() => {
-    setVideoOk(true);
-    setVideoVisible(false);
-  }, [videoSrc]);
+  const [heroSrc, setHeroSrc] = useState(HERO_PRIMARY);
 
   return (
-    <section className="relative min-h-[min(92vh,900px)] overflow-hidden bg-[#0a1628]">
+    <section
+      className="relative overflow-hidden"
+      style={{
+        backgroundColor: NAVY,
+        minHeight: "min(92vh, 900px)",
+      }}
+    >
       <div className="absolute inset-0">
-        <motion.div
-          className="absolute inset-0"
-          animate={reduceMotion ? undefined : { scale: [1, 1.02] }}
-          transition={
-            reduceMotion
-              ? undefined
-              : { duration: 24, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }
-          }
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={LOCAL_HERO}
+        <div className="absolute inset-0">
+          <Image
+            src={heroSrc}
             alt="Floss & Gloss Dentistry — practice exterior"
-            className="h-full w-full object-cover object-center"
-            style={{
-              filter: "contrast(1.05) brightness(0.92) saturate(1.05)",
-            }}
+            fill
+            priority
+            unoptimized
+            sizes="100vw"
+            className="object-cover"
+            /* Crop: bias right & slightly up so left copy sits on scrim and window signage sits lower in frame */
+            style={{ objectPosition: "75% 36%" }}
+            onError={() =>
+              setHeroSrc((prev) => {
+                if (prev === HERO_PRIMARY) return HERO_LEGACY;
+                if (prev === HERO_LEGACY) return HERO_SRC;
+                return prev;
+              })
+            }
           />
-        </motion.div>
-        {videoSrc && videoOk ? (
-          <video
-            className="absolute inset-0 z-[1] h-full w-full object-cover transition-opacity duration-1000"
-            style={{ opacity: videoVisible ? 1 : 0 }}
-            autoPlay
-            muted
-            loop
-            playsInline
-            poster={LOCAL_HERO}
-            aria-hidden
-            onError={() => setVideoOk(false)}
-            onPlaying={() => setVideoVisible(true)}
-          >
-            <source src={videoSrc} />
-          </video>
-        ) : null}
-        {/* Readability: heavy left column for type; lighter right so the building stays visible */}
+        </div>
+        {/* Wider, stronger left scrim so site copy separates from baked-in storefront text */}
         <div
-          className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#0a1628] via-[#0a1628]/88 to-transparent sm:via-[#0a1628]/65"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background: `linear-gradient(
+              to right,
+              ${NAVY} 0%,
+              ${NAVY}f2 18%,
+              ${NAVY}d8 34%,
+              ${NAVY}a0 48%,
+              ${NAVY}55 62%,
+              ${NAVY}18 76%,
+              transparent 92%
+            )`,
+          }}
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0a1628]/75 via-transparent to-[#0a1628]/25"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background: `linear-gradient(to top, ${NAVY}d0 0%, transparent 38%, ${NAVY}35 100%)`,
+          }}
           aria-hidden
         />
-        <div className="grain-overlay pointer-events-none absolute inset-0 opacity-70 mix-blend-overlay" />
+        <div className="grain-overlay pointer-events-none absolute inset-0 opacity-[0.18] mix-blend-overlay" />
       </div>
 
-      <div className="relative mx-auto flex min-h-[min(92vh,900px)] max-w-6xl flex-col justify-end px-6 pb-16 pt-12 md:justify-center md:pb-24 md:pt-20">
-        <motion.div
-          initial={reduceMotion ? undefined : { opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-          className="max-w-[40rem] text-white drop-shadow-[0_2px_24px_rgba(0,0,0,0.45)]"
+      <div
+        className="layout-shell relative z-10 flex flex-col justify-center pb-16 pt-10 md:pb-24 md:pt-16"
+        style={{ minHeight: "min(92vh, 900px)" }}
+      >
+        <div
+          className="self-start -translate-y-7 md:-translate-y-10"
+          style={{
+            width: "100%",
+            maxWidth: "min(100%, 36rem)",
+          }}
         >
-          <div className="mb-6 h-px w-14 bg-[#c4a574]" aria-hidden />
-          <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-[#e8d5b5]">
-            {kicker}
-          </p>
-          <h1 className="mt-4 font-display text-[2.35rem] font-semibold leading-[1.05] tracking-tight text-balance text-white md:text-5xl lg:text-[3.35rem]">
+          <div className="hero-stagger hero-stagger-1">
+            <div className="mb-2.5 h-px w-9" style={{ backgroundColor: GOLD }} aria-hidden />
+            <p
+              className="text-[10px] font-bold uppercase tracking-[0.34em]"
+              style={{ color: "#e8d5b5", lineHeight: 1.35 }}
+            >
+              {kicker}
+            </p>
+          </div>
+
+          <h1
+            className="hero-stagger hero-stagger-2 font-display font-semibold tracking-tight text-balance"
+            style={{
+              color: "#ffffff",
+              marginTop: "0.4rem",
+              fontSize: "clamp(1.65rem, 4.5vw, 3rem)",
+              lineHeight: 1.05,
+              textShadow: "0 2px 20px rgba(0,0,0,0.35)",
+            }}
+          >
             {headline}
           </h1>
-          <p className="mt-3 text-[13px] font-semibold uppercase tracking-[0.2em] text-white/80">
+
+          <p
+            className="hero-stagger hero-stagger-3 text-[10px] font-semibold uppercase tracking-[0.2em] sm:text-[11px]"
+            style={{
+              color: "rgba(255,255,255,0.86)",
+              marginTop: "0.65rem",
+              lineHeight: 1.4,
+            }}
+          >
             {trustLine}
           </p>
-          <p className="mt-6 max-w-xl text-lg font-light leading-relaxed text-white/95 md:text-xl">
+
+          <p
+            className="hero-stagger hero-stagger-4 font-light"
+            style={{
+              color: "rgba(255,255,255,0.92)",
+              marginTop: "0.85rem",
+              fontSize: "clamp(0.88rem, 1.85vw, 1.05rem)",
+              lineHeight: 1.55,
+              textShadow: "0 1px 12px rgba(0,0,0,0.25)",
+            }}
+          >
             {subline}
           </p>
-          <div className="mt-10 flex flex-wrap items-center gap-4">
+
+          <div
+            className="hero-stagger hero-stagger-5 flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-stretch sm:gap-2.5"
+            style={{ marginTop: "1rem" }}
+          >
             <a
               href="#book"
-              className="inline-flex items-center justify-center rounded-sm bg-[#c4a574] px-9 py-4 text-xs font-bold uppercase tracking-widest text-[#0a1628] shadow-xl transition hover:bg-[#d4b78d]"
+              className="inline-flex w-full min-w-0 items-center justify-center rounded-sm px-6 py-2.5 text-[11px] font-bold uppercase tracking-wider shadow-md transition hover:opacity-95 sm:w-auto sm:flex-1"
+              style={{ backgroundColor: GOLD, color: NAVY }}
             >
               Book appointment
             </a>
             <a
               href={phoneHref}
-              className="inline-flex items-center justify-center rounded-sm border border-white/50 bg-black/25 px-9 py-4 text-xs font-bold uppercase tracking-widest text-white backdrop-blur-sm transition hover:border-white/70 hover:bg-black/35"
+              className="inline-flex w-full min-w-0 items-center justify-center rounded-sm px-6 py-2.5 text-[11px] font-bold uppercase tracking-wider transition hover:opacity-95 sm:w-auto sm:flex-1"
+              style={{
+                color: "#ffffff",
+                border: "1px solid rgba(255,255,255,0.5)",
+                backgroundColor: "rgba(0,0,0,0.18)",
+              }}
             >
               Call now · {phoneDisplay}
             </a>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

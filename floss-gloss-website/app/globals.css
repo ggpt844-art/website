@@ -15,16 +15,278 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+  /*
+   * Tailwind preflight sets html font-family to var(--font-sans). If the variable
+   * is missing for any reason, the whole declaration is invalid and the UA falls
+   * back to a serif default. Keep a real system stack here as the base.
+   */
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 body {
   color: var(--text);
   background: var(--bg);
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+}
+
+.site-page {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100vh;
+  display: block;
+  box-sizing: border-box;
+}
+
+/* Header nav hovers — plain CSS so it works even if utility classes don’t apply */
+.site-header-nav a {
+  color: rgba(255, 255, 255, 0.82);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.site-header-nav a:hover,
+.site-header-nav a:focus-visible {
+  color: #ffffff;
 }
 
 ::selection {
   background: rgba(196, 165, 116, 0.25);
   color: var(--navy);
+}
+
+@layer components {
+  /**
+   * Site shell — mirrors mx-auto max-w-6xl px-6 when Tailwind fails.
+   */
+  .layout-shell {
+    width: 100%;
+    max-width: 72rem;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    box-sizing: border-box;
+  }
+
+  .layout-trust-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem 2.5rem;
+    text-align: center;
+    width: 100%;
+  }
+  @media (min-width: 768px) {
+    .layout-trust-inner {
+      justify-content: space-between;
+      text-align: left;
+    }
+  }
+
+  .layout-split-2 {
+    display: block;
+  }
+  @media (min-width: 768px) {
+    .layout-split-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
+      gap: 4rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .layout-split-2--wide {
+      gap: 6rem;
+    }
+  }
+
+  .layout-visit-split {
+    display: block;
+  }
+  @media (min-width: 768px) {
+    .layout-visit-split {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: stretch;
+      gap: 4rem;
+    }
+  }
+
+  .layout-grid-3-cols {
+    display: grid;
+    gap: 2.5rem;
+  }
+  @media (min-width: 768px) {
+    .layout-grid-3-cols {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 2rem;
+    }
+  }
+
+  .layout-services-grid {
+    display: grid;
+    gap: 1.5rem;
+  }
+  @media (min-width: 640px) {
+    .layout-services-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1024px) {
+    .layout-services-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .layout-treatments-head {
+    display: block;
+  }
+  @media (min-width: 768px) {
+    .layout-treatments-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 3rem;
+    }
+  }
+
+  .layout-treatments-list {
+    display: grid;
+    gap: 0.75rem;
+  }
+  @media (min-width: 640px) {
+    .layout-treatments-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1024px) {
+    .layout-treatments-list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .layout-insurance-2 {
+    display: grid;
+    gap: 1.5rem;
+  }
+  @media (min-width: 768px) {
+    .layout-insurance-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .layout-footer-grid {
+    display: grid;
+    gap: 3rem;
+  }
+  @media (min-width: 768px) {
+    .layout-footer-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1024px) {
+    .layout-footer-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 2.5rem;
+    }
+  }
+
+  .layout-book-inner {
+    width: 100%;
+    max-width: 48rem;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    box-sizing: border-box;
+  }
+
+  /* Legacy alias */
+  .shell {
+    max-width: 72rem;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  /* Reviews section shell + header row (Tailwind fallbacks) */
+  .reviews-header {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1.5rem;
+  }
+  @media (min-width: 768px) {
+    .reviews-header {
+      flex-direction: row;
+      align-items: flex-end;
+    }
+  }
+
+  /* Hero: premium load-in (no glass card) */
+  @keyframes hero-rise {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 1.75rem, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+  .hero-stagger {
+    opacity: 0;
+    animation: hero-rise 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+  .hero-stagger-1 {
+    animation-delay: 0.04s;
+  }
+  .hero-stagger-2 {
+    animation-delay: 0.1s;
+  }
+  .hero-stagger-3 {
+    animation-delay: 0.16s;
+  }
+  .hero-stagger-4 {
+    animation-delay: 0.22s;
+  }
+  .hero-stagger-5 {
+    animation-delay: 0.28s;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-stagger {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .review-slider-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    padding: 0.75rem 1rem;
+  }
+  @media (min-width: 768px) {
+    .review-slider-nav {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+  .review-slider-quote {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    min-width: 0;
+  }
 }
 
 @layer utilities {
