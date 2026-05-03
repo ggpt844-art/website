@@ -1,12 +1,16 @@
 import { Hero } from "@/components/Hero";
+import { SiteHeader } from "@/components/SiteHeader";
 
 const SITE = {
   name: "Floss & Gloss Dentistry",
-  legalLine: "Independent practice — replace with real legal footer copy.",
-  headline: "Dentistry that feels local, calm, and clear.",
+  legalLine: "© All rights reserved. Replace with privacy policy & accessibility links.",
+  kicker: "Mississauga, Ontario",
+  headline: "Trusted dentistry for your whole family",
+  trustLine: "Independently owned · Patient-first care",
   subline:
-    "Serving Mississauga families near Streetsville and Meadowvale — preventive care, cosmetic touches, and honest consults without the jargon. New patients welcome.",
+    "Thoughtful family, cosmetic, and restorative dentistry near Streetsville and Meadowvale — unhurried visits, clear options, and a team that earns your trust visit by visit.",
   phoneDisplay: "(905) 555-1425",
+  phoneShort: "905-555-1425",
   phoneHref: "tel:+19055551425",
   email: "hello@flossandglossdentistry.example",
   addressLine: "265 Queen St S #1",
@@ -14,63 +18,190 @@ const SITE = {
   mapQuery: "265+Queen+St+S+Mississauga+L5M+1L9",
 };
 
-const SERVICES = [
+const TRUST_PILLARS = [
+  { title: "Canadian practice", sub: "Locally led team you’ll recognize chair-side." },
+  { title: "Transparent consults", sub: "Plans explained before you commit." },
+  { title: "Calm, modern environment", sub: "Designed for focus — not noisy sales floors." },
+];
+
+const SERVICE_GROUPS = [
   {
-    title: "Family & preventive",
-    body: "Exams, hygiene, kids’ visits, and clear recall rhythm so small issues stay small.",
+    title: "Family & children",
+    items: ["Check-ups & hygiene", "Kids’ first visits", "Preventive care plans"],
   },
   {
-    title: "Cosmetic & smile refresh",
-    body: "Whitening, bonding, veneers discussion — goals first, options explained plainly.",
+    title: "Cosmetic",
+    items: ["Smile whitening", "Veneer consults", "Alignment co-ordination"],
   },
   {
-    title: "Restorative consults",
-    body: "Crowns, fillings, and replacements framed with timelines you can plan around.",
+    title: "Restorative",
+    items: ["Crowns & bridges", "Fillings", "Replace missing teeth"],
   },
+  {
+    title: "Comfort & urgency",
+    items: ["Same-week triage when available", "Gentle appointments", "Clear after-care"],
+  },
+];
+
+const TREATMENTS = [
+  "Dental implants",
+  "Invisalign® consults",
+  "Root canal therapy",
+  "Extractions",
+  "Sedation options",
+  "Teeth whitening",
+  "Dentures",
+  "Periodontal care",
+  "TMJ / bite discussion",
+  "Surgical referrals when needed",
 ];
 
 const TEAM = [
   {
-    role: "Lead Dentist — placeholder",
-    name: "Dr. Jordan Lee",
-    note: "Demo bio only. Replace with verified credentials and photo before production.",
+    initials: "JL",
+    role: "Lead dentist — placeholder",
+    name: "Dr. Jordan Lee, DDS",
+    note: "Replace with verified bio: gentle diagnostics, cosmetic planning, and family care.",
   },
   {
-    role: "Associate Dentist — placeholder",
-    name: "Dr. Priya Shah",
-    note: "Prevention-forward care and treatment clarity. Not a real patient endorsement.",
+    initials: "PS",
+    role: "Associate dentist — placeholder",
+    name: "Dr. Priya Shah, DMD",
+    note: "Placeholder: prevention-first philosophy and clear treatment sequencing.",
   },
   {
-    role: "Registered Dental Hygienist — placeholder",
+    initials: "TN",
+    role: "Dental hygiene — placeholder",
     name: "Taylor Nguyen, RDH",
-    note: "Focus on gentle cleanings, gum health, and at-home routines that stick.",
+    note: "Placeholder: thorough hygiene, gum health coaching, recall you’ll keep.",
   },
 ];
 
 export default function HomePage() {
   return (
     <>
+      <SiteHeader phoneHref={SITE.phoneHref} phoneShort={SITE.phoneShort} />
       <Hero
-        businessName={SITE.name}
+        kicker={SITE.kicker}
         headline={SITE.headline}
+        trustLine={SITE.trustLine}
         subline={SITE.subline}
         phoneDisplay={SITE.phoneDisplay}
         phoneHref={SITE.phoneHref}
       />
 
-      <section className="border-b border-black/5 bg-white py-16">
+      {/* Trust ribbon — premium strip */}
+      <section className="border-b border-black/[0.06] bg-cream py-5">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-10 gap-y-3 px-6 text-center md:justify-between md:text-left">
+          {TRUST_PILLARS.map((p) => (
+            <div key={p.title} className="max-w-xs">
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-sea">{p.title}</p>
+              <p className="mt-1 text-sm text-ink/65">{p.sub}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Family headline block — M City–style rhythm */}
+      <section className="bg-paper py-20 md:py-28">
+        <div className="mx-auto max-w-6xl px-6 md:grid md:grid-cols-2 md:items-start md:gap-16 lg:gap-24">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-gold">For everyone you love</p>
+            <h2 className="mt-4 font-display text-4xl font-semibold leading-[1.12] tracking-tight text-navy md:text-5xl">
+              Simple, stress-free dentistry — start to finish
+            </h2>
+          </div>
+          <div className="mt-10 md:mt-2">
+            <p className="text-lg leading-relaxed text-ink/75">
+              From first cleanings to cosmetic refinements, we keep visits predictable: what we’re
+              looking at, what we recommend, and what you can defer — with timelines that respect
+              your calendar.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-4">
+              <a
+                href="#book"
+                className="text-sm font-bold uppercase tracking-widest text-sea underline decoration-gold/50 decoration-2 underline-offset-8 transition hover:decoration-gold"
+              >
+                Schedule a visit
+              </a>
+              <a
+                href={SITE.phoneHref}
+                className="text-sm font-bold uppercase tracking-widest text-ink/50 transition hover:text-ink"
+              >
+                Prefer the phone? {SITE.phoneShort}
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Services */}
+      <section id="services" className="border-t border-black/[0.05] bg-cream py-20 md:py-28">
         <div className="mx-auto max-w-6xl px-6">
-          <p className="text-center text-sm font-medium uppercase tracking-wider text-sea">
-            Why patients choose us
-          </p>
-          <ul className="mt-10 flex flex-col gap-6 md:flex-row md:justify-center md:gap-12">
-            {[
-              "Consult-first — no pressure scripts",
-              "Mississauga roots, Streetsville-adjacent convenience",
-              "Modern, unfussy care for busy families",
-            ].map((t) => (
-              <li key={t} className="flex items-start gap-3 text-ink/85 md:max-w-xs">
-                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-coral" />
+          <div className="max-w-2xl">
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-sea">What we offer</p>
+            <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight text-navy md:text-[2.75rem]">
+              Services shaped around real life in Mississauga
+            </h2>
+            <p className="mt-4 text-ink/65">
+              Curated for clarity — detailed clinical pages can follow as your practice approves
+              copy.
+            </p>
+          </div>
+          <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {SERVICE_GROUPS.map((g, i) => (
+              <article
+                key={g.title}
+                className="group relative overflow-hidden rounded-sm border border-black/[0.06] bg-white p-8 shadow-card transition duration-300 hover:-translate-y-1 hover:shadow-lift"
+              >
+                <span
+                  className="absolute right-6 top-6 font-display text-5xl font-semibold text-gold/25 transition group-hover:text-gold/35"
+                  aria-hidden
+                >
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <h3 className="font-display text-xl font-semibold text-navy">{g.title}</h3>
+                <ul className="mt-6 space-y-3 text-sm leading-relaxed text-ink/68">
+                  {g.items.map((it) => (
+                    <li key={it} className="flex gap-2">
+                      <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-gold" />
+                      {it}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Treatments — dense premium list */}
+      <section id="treatments" className="bg-navy py-20 text-white md:py-28">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="md:flex md:items-end md:justify-between md:gap-12">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-gold">Clinical focus</p>
+              <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight md:text-[2.75rem]">
+                Treatments &amp; advanced care
+              </h2>
+              <p className="mt-4 max-w-xl text-white/55">
+                A sample clinical menu — align with your Chart of Services and regulatory copy
+                before launch.
+              </p>
+            </div>
+            <a
+              href="#book"
+              className="mt-8 inline-flex shrink-0 self-start rounded-sm border border-white/25 px-7 py-3.5 text-xs font-bold uppercase tracking-widest text-white transition hover:border-gold/50 hover:text-gold md:mt-0"
+            >
+              Request a consult
+            </a>
+          </div>
+          <ul className="mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {TREATMENTS.map((t) => (
+              <li
+                key={t}
+                className="border-l-2 border-gold/45 py-1 pl-4 text-sm text-white/78"
+              >
                 {t}
               </li>
             ))}
@@ -78,117 +209,132 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="services" className="py-20">
+      {/* Team */}
+      <section id="team" className="border-t border-black/[0.05] bg-paper py-20 md:py-28">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
-            What we do
-          </h2>
-          <p className="mt-4 max-w-2xl text-ink/70">
-            Straightforward service buckets — your actual clinical menu belongs here once the
-            practice approves copy.
-          </p>
-          <div className="mt-12 grid gap-8 md:grid-cols-3">
-            {SERVICES.map((s) => (
-              <article
-                key={s.title}
-                className="rounded-2xl border border-black/8 bg-white/90 p-8 shadow-sm backdrop-blur"
-              >
-                <h3 className="font-display text-xl font-semibold text-ink">{s.title}</h3>
-                <p className="mt-4 text-sm leading-relaxed text-ink/70">{s.body}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="team" className="border-y border-black/5 bg-mist/60 py-20">
-        <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
-            Meet the team
-          </h2>
-          <p className="mt-4 max-w-2xl text-ink/70">
-            Placeholder names and bios for layout. Swap for real clinicians and compliance-approved
-            text.
-          </p>
-          <div className="mt-12 grid gap-8 md:grid-cols-3">
-            {TEAM.map((m) => (
-              <article key={m.name} className="rounded-2xl bg-white p-8 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-wider text-sea">{m.role}</p>
-                <h3 className="mt-3 font-display text-xl font-semibold">{m.name}</h3>
-                <p className="mt-4 text-sm leading-relaxed text-ink/68">{m.note}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-20">
-        <div className="mx-auto max-w-6xl px-6 md:flex md:items-start md:justify-between md:gap-16">
-          <div className="max-w-lg">
-            <h2 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
-              Visit us
+          <div className="max-w-2xl">
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-sea">Our clinicians</p>
+            <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight text-navy md:text-[2.75rem]">
+              Meet the team
             </h2>
-            <p className="mt-4 text-ink/70">
-              Queen St S visibility with easy ties to Streetsville’s village energy and quick
-              access for Meadowvale and Churchill Meadows — replace with verified directional copy.
+            <p className="mt-4 text-ink/65">
+              Portrait photography and full credentials belong here before you go live — these are
+              layout placeholders only.
             </p>
-            <address className="mt-8 not-italic text-ink">
-              <strong className="block">{SITE.name}</strong>
-              <span className="mt-2 block">{SITE.addressLine}</span>
-              <span className="block">{SITE.cityLine}</span>
-              <a
-                className="mt-4 block text-sea underline-offset-4 hover:underline"
-                href={SITE.phoneHref}
+          </div>
+          <div className="mt-14 grid gap-10 md:grid-cols-3 md:gap-8">
+            {TEAM.map((m) => (
+              <article
+                key={m.name}
+                className="flex flex-col overflow-hidden rounded-sm border border-black/[0.06] bg-white shadow-card"
               >
+                <div className="relative aspect-[4/5] bg-gradient-to-br from-navy/90 via-navy/70 to-sea/30">
+                  <div className="absolute inset-0 grain-overlay opacity-40 mix-blend-soft-light" />
+                  <span className="absolute inset-0 flex items-center justify-center font-display text-6xl font-semibold text-white/25">
+                    {m.initials}
+                  </span>
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-navy/90 to-transparent p-6">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold/90">
+                      {m.role}
+                    </p>
+                    <h3 className="mt-1 font-display text-2xl font-semibold text-white">{m.name}</h3>
+                  </div>
+                </div>
+                <div className="flex flex-1 flex-col p-8">
+                  <p className="text-sm leading-relaxed text-ink/68">{m.note}</p>
+                  <span className="mt-6 text-xs font-bold uppercase tracking-widest text-sea/80">
+                    Profile · placeholder
+                  </span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Visit */}
+      <section id="visit" className="border-t border-black/[0.05] bg-cream py-20 md:py-28">
+        <div className="mx-auto max-w-6xl px-6 md:grid md:grid-cols-2 md:items-stretch md:gap-16">
+          <div className="flex flex-col justify-center">
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-sea">Location</p>
+            <h2 className="mt-3 font-display text-4xl font-semibold tracking-tight text-navy md:text-[2.75rem]">
+              Visit us on Queen South
+            </h2>
+            <p className="mt-4 text-ink/65">
+              Convenient for Streetsville village runs, Meadowvale commutes, and west Mississauga
+              families — adjust directions with verified landmarks.
+            </p>
+            <address className="mt-10 not-italic">
+              <strong className="font-display text-xl text-navy">{SITE.name}</strong>
+              <p className="mt-3 text-ink/80">
+                {SITE.addressLine}
+                <br />
+                {SITE.cityLine}
+              </p>
+              <a className="mt-4 inline-block text-sm font-bold text-sea" href={SITE.phoneHref}>
                 {SITE.phoneDisplay}
               </a>
             </address>
           </div>
-          <div className="mt-12 md:mt-0 md:w-[420px]">
+          <div className="mt-12 flex min-h-[280px] flex-col justify-center rounded-sm border border-black/[0.06] bg-white p-8 shadow-card md:mt-0 md:min-h-[360px]">
+            <p className="text-sm text-ink/55">
+              Map preview — embed Google Maps or static hero image of the storefront.
+            </p>
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${SITE.mapQuery}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex rounded-xl border border-black/10 bg-white px-5 py-3 text-sm font-medium text-ink shadow-sm transition hover:border-sea/40"
+              className="mt-8 inline-flex w-fit items-center gap-2 rounded-sm border border-navy/15 bg-navy px-8 py-4 text-xs font-bold uppercase tracking-widest text-white transition hover:bg-navy/90"
             >
-              Open in Google Maps →
+              Open in Maps
             </a>
           </div>
         </div>
       </section>
 
-      <section id="book" className="bg-ink py-20 text-white">
-        <div className="mx-auto max-w-6xl px-6 text-center">
-          <h2 className="font-display text-3xl font-semibold md:text-4xl">Ready when you are</h2>
-          <p className="mx-auto mt-4 max-w-xl text-white/75">
-            This block stands in for your real booking widget or PMS link — wire it when you go
-            live.
+      {/* Book */}
+      <section id="book" className="relative overflow-hidden bg-navy py-24 text-center">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_0%,rgba(196,165,116,0.12),transparent)]" />
+        <div className="relative mx-auto max-w-3xl px-6">
+          <div className="mx-auto mb-8 h-px w-16 bg-gold" />
+          <h2 className="font-display text-4xl font-semibold text-white md:text-5xl">
+            Let us take care of your smile
+          </h2>
+          <p className="mt-5 text-lg text-white/65">
+            Wire your live scheduling link, HealthKit, or front-desk form here — this is a premium
+            placeholder block.
           </p>
-          <div className="mt-10 flex flex-wrap justify-center gap-4">
+          <div className="mt-12 flex flex-wrap justify-center gap-4">
             <a
               href={SITE.phoneHref}
-              className="rounded-full bg-white px-8 py-3.5 text-sm font-semibold text-ink"
+              className="rounded-sm bg-gold px-10 py-4 text-xs font-bold uppercase tracking-widest text-navy transition hover:bg-[#d4b78d]"
             >
-              Call to schedule
+              Call {SITE.phoneDisplay}
             </a>
             <a
-              href={`mailto:${SITE.email}?subject=Appointment%20request`}
-              className="rounded-full border border-white/35 px-8 py-3.5 text-sm font-semibold text-white"
+              href={`mailto:${SITE.email}?subject=New%20patient%20appointment`}
+              className="rounded-sm border border-white/30 px-10 py-4 text-xs font-bold uppercase tracking-widest text-white transition hover:border-gold/50 hover:text-gold"
             >
-              Email us
+              Email the desk
             </a>
           </div>
         </div>
       </section>
 
-      <footer className="border-t border-white/10 bg-ink py-10 text-sm text-white/55">
-        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 md:flex-row md:items-center md:justify-between">
-          <p>
-            © {new Date().getFullYear()} {SITE.name}. {SITE.legalLine}
-          </p>
-          <p className="text-white/45">
-            Standalone marketing site — no shared backend with other projects.
-          </p>
+      <footer className="border-t border-white/10 bg-[#060d16] py-14 text-sm text-white/45">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="flex flex-col gap-10 md:flex-row md:justify-between">
+            <div>
+              <p className="font-display text-xl text-white/90">
+                Floss <span className="text-gold">&amp;</span> Gloss
+              </p>
+              <p className="mt-2 text-white/40">{SITE.legalLine}</p>
+            </div>
+            <div className="text-right md:text-right">
+              <p>{SITE.addressLine}</p>
+              <p>{SITE.cityLine}</p>
+            </div>
+          </div>
         </div>
       </footer>
     </>

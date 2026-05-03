@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
-import { DM_Sans, Fraunces } from "next/font/google";
+import { Cormorant_Garamond, Manrope } from "next/font/google";
 import "./globals.css";
 
-const display = Fraunces({
+const display = Cormorant_Garamond({
   subsets: ["latin"],
   variable: "--font-display",
   display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
-const sans = DM_Sans({
+const sans = Manrope({
   subsets: ["latin"],
   variable: "--font-sans",
   display: "swap",
@@ -16,10 +17,10 @@ const sans = DM_Sans({
 
 const siteName = "Floss & Gloss Dentistry";
 const description =
-  "Family-friendly dentist in Mississauga near Streetsville — preventive care, cosmetic options, and a calm, consult-first experience. Queen St S location.";
+  "Trusted Mississauga dentist near Streetsville — family, cosmetic, and restorative care in a calm, consult-first setting. Queen St S.";
 
 export const metadata: Metadata = {
-  title: `${siteName} | Mississauga Dentist`,
+  title: `Dentist in Mississauga, ON | ${siteName}`,
   description,
   keywords: [
     "Mississauga dentist",
@@ -29,7 +30,7 @@ export const metadata: Metadata = {
     "Queen Street South dental",
   ],
   openGraph: {
-    title: siteName,
+    title: `${siteName} | Mississauga`,
     description,
     locale: "en_CA",
     type: "website",
@@ -40,7 +41,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en-CA" className={`${display.variable} ${sans.variable}`}>
-      <body className="min-h-screen font-sans antialiased">{children}</body>
+      <body className="min-h-screen bg-paper font-sans text-ink antialiased">{children}</body>
     </html>
   );
 }

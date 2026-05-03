@@ -3,10 +3,14 @@
 @tailwind utilities;
 
 :root {
-  --bg: #f4f9fa;
-  --text: #0c1520;
-  --muted: #4a5f66;
-  --card: rgba(255, 255, 255, 0.86);
+  --bg: #f7f5f2;
+  --bg-elevated: #fffcf8;
+  --text: #0d1a1f;
+  --muted: #4a5c62;
+  /* champagne gold — premium accent */
+  --gold: #c4a574;
+  --gold-dim: rgba(196, 165, 116, 0.35);
+  --navy: #0a1628;
 }
 
 html {
@@ -16,4 +20,19 @@ html {
 body {
   color: var(--text);
   background: var(--bg);
+}
+
+::selection {
+  background: rgba(196, 165, 116, 0.25);
+  color: var(--navy);
+}
+
+@layer utilities {
+  .grain-overlay {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
 }
