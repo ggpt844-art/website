@@ -46,12 +46,21 @@ export async function rebuildDemoConfigForSlug(slug: string): Promise<DemoConfig
     orderBy: { createdAt: "desc" },
   });
 
+  const intelligencePacket = await prisma.businessIntelligencePacket.findFirst({
+    where: { businessId: b.id },
+    orderBy: { createdAt: "desc" },
+  });
+
   const fingerprints = await getRecentDesignFingerprints(24);
   const tier = toPackageTier(demo.packageTier);
 
   const prev = demo.baseConfigJson as unknown as DemoConfig;
   const manual = (prev.intraNicheManualOverrides ?? null) as Partial<IntraNicheStrategy> | null;
   const recentSame = await getRecentSameNicheFingerprints(nicheSlugToParentKey(`${b.niche}`), 16, demo.slug);
+
+  const placeholderCustomSections = (prev.pageStrategy?.customSections ?? []).filter((c) =>
+    /placeholder/i.test(c.title),
+  );
 
   const fresh = await buildDemoConfig({
     businessName: b.name,
@@ -76,6 +85,14 @@ export async function rebuildDemoConfigForSlug(slug: string): Promise<DemoConfig
     recentDesignFingerprints: fingerprints,
     intraNicheManualOverrides: manual,
     recentSameNicheFingerprints: recentSame,
+    intelligenceSummary: intelligencePacket?.packetJson
+      ? JSON.stringify(intelligencePacket.packetJson).slice(0, 12_000)
+      : null,
+    verifiedNearbyCities:
+      (intelligencePacket?.packetJson as { localSeoNotes?: { verifiedNearbyCities?: string[] } } | null)
+        ?.localSeoNotes?.verifiedNearbyCities ?? undefined,
+    dentalLocalCinematicHero: prev.assets?.heroCinematic === "dental_local",
+    extraCustomSections: placeholderCustomSections.length ? placeholderCustomSections : undefined,
   });
 
   const locked = applyLockedHeroFromPrevious(fresh, demo.baseConfigJson);

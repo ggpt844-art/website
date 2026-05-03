@@ -92,9 +92,9 @@ export const DemoConfigSchema = z.object({
     /** Optional GLB for niche hero accents (e.g. /models/roof-detail.glb) */
     heroGlbUrl: z.string().optional(),
     /**
-     * `thermal_loss` = cinematic photo/video plate + FLIR-style grade (house-heat-loss demos).
+     * `thermal_loss` = attic / envelope cinematic grade; `dental_local` = village/clinic plate + calm grade.
      */
-    heroCinematic: z.literal("thermal_loss").optional(),
+    heroCinematic: z.enum(["thermal_loss", "dental_local"]).optional(),
     heroVideoUrl: z.string().optional(),
     /** Poster for video + fallback still URL for thermal treatment */
     heroPosterUrl: z.string().optional(),

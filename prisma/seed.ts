@@ -46,11 +46,19 @@ interface SampleSpec {
   websiteStatus:
     | "no_website"
     | "outdated_website"
-    | "decent_but_low_conversion";
+    | "decent_but_low_conversion"
+    | "broken_website";
   websiteUrl?: string;
   rating?: number;
   reviewCount?: number;
   weaknesses: string[];
+  /** Full street address for NAP / JSON-LD / local SEO */
+  address?: string;
+  /** Feeds intra strategy + AI layer (Neighbourhood, positioning — stay factual). */
+  intelligenceSummary?: string;
+  verifiedNearbyCities?: string[];
+  dentalLocalCinematicHero?: boolean;
+  teamPlaceholders?: Array<{ title: string; body: string }>;
 }
 
 const SAMPLES: SampleSpec[] = [
@@ -95,6 +103,45 @@ const SAMPLES: SampleSpec[] = [
       "No sticky mobile CTA",
     ],
   },
+  {
+    name: "Floss and Gloss Dentistry",
+    city: "Mississauga",
+    niche: "dentists",
+    phone: "+19055551425",
+    websiteStatus: "broken_website",
+    websiteUrl: "https://example-floss-gloss-dentistry.local",
+    address: "265 Queen St S #1, Mississauga, ON L5M 1L9",
+    rating: 4.8,
+    reviewCount: 62,
+    weaknesses: [
+      "Previous site failed intermittently — patients abandon before booking",
+      "No obvious mobile-first booking path",
+      "Review proof and trust cues were buried deep in the layout",
+      "Service taxonomy did not match how families search near Streetsville",
+    ],
+    intelligenceSummary: [
+      "Neighbourhood: Mississauga practice on Queen St S with strong Streetsville village adjacency.",
+      "Buyer search reality: family dentist, hygiene, whitening, Invisalign-adjacent cosmetic interest.",
+      "Local context: Credit River greenbelt proximity, village retail rhythm, commuter pull from Meadowvale and Churchill Meadows — do not invent awards or same-day guarantees.",
+      "Tone: calm consult-first dentistry; bilingual-ready copy later if needed.",
+    ].join(" "),
+    verifiedNearbyCities: ["Streetsville", "Meadowvale", "Churchill Meadows", "Central Erin Mills"],
+    dentalLocalCinematicHero: true,
+    teamPlaceholders: [
+      {
+        title: "Dr. Jordan Lee — Lead Dentist (placeholder)",
+        body: "Demo-only bio: family and cosmetic care with consult-first pacing. Replace with verified credentials before launch.",
+      },
+      {
+        title: "Dr. Priya Shah — Associate Dentist (placeholder)",
+        body: "Placeholder profile for prevention-focused visits and clear treatment explanations — swap for approved copy.",
+      },
+      {
+        title: "Taylor Nguyen, RDH — Hygiene (placeholder)",
+        body: "Seeded hygienist card emphasizing recall, gum health, and gentle cleanings — not a patient testimonial.",
+      },
+    ],
+  },
 ];
 
 async function seedSamples() {
@@ -112,6 +159,7 @@ async function seedSamples() {
         city: s.city,
         region: "ON",
         country: "CA",
+        address: s.address ?? null,
         phone: s.phone,
         websiteUrl: s.websiteUrl,
         websiteStatus: s.websiteStatus,
@@ -127,12 +175,36 @@ async function seedSamples() {
       },
     });
 
+    if (s.intelligenceSummary?.trim()) {
+      await prisma.businessIntelligencePacket.create({
+        data: {
+          businessId: b.id,
+          packetJson: {
+            strategyInputs: {
+              mainBuyerPain: s.weaknesses[0] ?? "",
+              moneyAngle: "Transparent consult and recall-friendly care",
+              conversionGap: "Booking clarity on mobile",
+              contactReason: "Neighbourhood family + cosmetic interest",
+            },
+            currentWebsite: {
+              weaknesses: s.weaknesses,
+            },
+            localSeoNotes: {
+              verifiedNearbyCities: s.verifiedNearbyCities ?? [],
+              anchorAddress: s.address ?? null,
+            },
+          },
+        },
+      });
+    }
+
     await prisma.websiteCheck.create({
       data: {
         businessId: b.id,
         url: s.websiteUrl ?? "(none)",
         status: s.websiteStatus,
-        loadsSuccessfully: !!s.websiteUrl,
+        loadsSuccessfully:
+          s.websiteStatus !== "no_website" && s.websiteStatus !== "broken_website",
         title: s.websiteUrl ? `${s.name} — ${s.city}` : null,
         visualQualityScore: s.websiteStatus === "decent_but_low_conversion" ? 65 : 35,
         conversionScore: s.websiteStatus === "decent_but_low_conversion" ? 50 : 25,
@@ -172,9 +244,16 @@ async function seedSamples() {
       rating: b.rating,
       reviewCount: b.reviewCount,
       websiteUrl: b.websiteUrl,
+      address: b.address,
+      region: "ON",
+      country: "CA",
       weaknesses: s.weaknesses,
       slugOverride: b.slug,
       recentSameNicheFingerprints: [],
+      intelligenceSummary: s.intelligenceSummary ?? null,
+      verifiedNearbyCities: s.verifiedNearbyCities,
+      dentalLocalCinematicHero: s.dentalLocalCinematicHero,
+      extraCustomSections: s.teamPlaceholders,
     });
 
     const demo = await prisma.demoConfig.create({

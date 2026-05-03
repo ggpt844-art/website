@@ -15,12 +15,16 @@ import {
   generateAiSearchConfig,
 } from "@/lib/ai-search/generateAiSearchConfig";
 import { buildGrowthLayers } from "@/lib/growth/buildGrowthLayers";
-import type { DesignFingerprint } from "@/lib/experience/experienceSchemas";
-import { planExperience, DEMO_SECTION_IDS } from "@/lib/experience/planExperience";
+import type { DesignFingerprint, PageStrategy } from "@/lib/experience/experienceSchemas";
+import { planExperience, DEMO_SECTION_IDS, type DemoSectionId } from "@/lib/experience/planExperience";
 import {
   HEAT_LOSS_CINEMATIC_PLATE,
   heatLossHeroVideoFromEnv,
 } from "@/lib/cinematic/heatLossHero";
+import {
+  DENTAL_LOCAL_CINEMATIC_PLATE,
+  dentalLocalHeroVideoFromEnv,
+} from "@/lib/cinematic/dentalLocalHero";
 import { generateIntraNicheStrategy } from "@/lib/strategy/generateIntraNicheStrategy";
 import { mergeIntraNicheStrategy } from "@/lib/strategy/mergeIntraNicheStrategy";
 import {
@@ -31,6 +35,21 @@ import {
 import { gradeIntraNicheDifferentiation } from "@/lib/strategy/intraNicheGrader";
 import type { IntraNicheStrategy } from "@/lib/strategy/intraNicheTypes";
 import type { SameNicheDesignFingerprint } from "@/lib/strategy/intraNicheTypes";
+
+function mergeExtraCustomSections(
+  ps: PageStrategy,
+  extra?: Array<{ title: string; body: string }>,
+): PageStrategy {
+  if (!extra?.length) return ps;
+  const customSections = [...ps.customSections, ...extra];
+  let sectionOrder = [...ps.sectionOrder] as DemoSectionId[];
+  if (!sectionOrder.includes("customNiche")) {
+    const idx = sectionOrder.indexOf("services");
+    const at = idx >= 0 ? idx + 1 : 2;
+    sectionOrder = [...sectionOrder.slice(0, at), "customNiche", ...sectionOrder.slice(at)];
+  }
+  return { ...ps, customSections, sectionOrder };
+}
 
 export interface BuildDemoConfigInput {
   businessName: string;
@@ -51,6 +70,10 @@ export interface BuildDemoConfigInput {
   directoryLinks?: Record<string, string> | null;
   socialLinks?: Record<string, string> | null;
   verifiedNearbyCities?: string[];
+  /** Append cards to custom niche section (e.g. placeholder team bios). */
+  extraCustomSections?: Array<{ title: string; body: string }>;
+  /** Village/clinic cinematic plate + optional DENTAL_HERO_VIDEO_URL (dentists only). */
+  dentalLocalCinematicHero?: boolean;
   /** Recent demo fingerprints — anti-repetition for section rhythm / scene pairing */
   recentDesignFingerprints?: DesignFingerprint[];
   /** Optional crawl / audit summary for sub-niche classification */
@@ -125,9 +148,11 @@ export async function buildDemoConfig(input: BuildDemoConfigInput): Promise<Demo
     intraNicheStrategy: intra,
   });
 
+  const pageStrategy = mergeExtraCustomSections(exp.pageStrategy, input.extraCustomSections);
+
   const sameNicheDesignFingerprint = buildSameNicheDesignFingerprint({
     intra,
-    pageStrategy: exp.pageStrategy,
+    pageStrategy,
     visualDirection: exp.visualDirection,
     sceneSpec: exp.sceneSpec,
     primaryCTA: strategy.primaryCTA,
@@ -136,7 +161,7 @@ export async function buildDemoConfig(input: BuildDemoConfigInput): Promise<Demo
 
   const intraNicheDifferentiationMeta = gradeIntraNicheDifferentiation({
     strategy: intra,
-    pageStrategy: exp.pageStrategy,
+    pageStrategy,
     visualDirection: exp.visualDirection,
     sceneSpec: exp.sceneSpec,
     primaryCTA: strategy.primaryCTA,
@@ -144,7 +169,7 @@ export async function buildDemoConfig(input: BuildDemoConfigInput): Promise<Demo
     recentSameNicheFingerprints: recentSame,
   });
 
-  const sections = exp.pageStrategy.sectionOrder.filter((s: string) => allowed.has(s));
+  const sections = pageStrategy.sectionOrder.filter((s: string) => allowed.has(s));
 
   const galleryUrls = (input.assetProfile?.galleryImages ?? [])
     .map((g) => g.url)
@@ -202,8 +227,21 @@ export async function buildDemoConfig(input: BuildDemoConfigInput): Promise<Demo
   };
 
   const heatVid = heatLossHeroVideoFromEnv();
-  const assets =
-    exp.threeDPreset === "house-heat-loss"
+  const dentalVid = dentalLocalHeroVideoFromEnv();
+  const dentalLocal =
+    input.dentalLocalCinematicHero === true && niche.slug === "dentists";
+
+  const assets = dentalLocal
+    ? {
+        ...initialAssets,
+        heroCinematic: "dental_local" as const,
+        use3DFallback: false,
+        heroLocked: true,
+        heroAssetUrl: initialAssets.heroAssetUrl ?? DENTAL_LOCAL_CINEMATIC_PLATE,
+        heroPosterUrl: initialAssets.heroAssetUrl ?? DENTAL_LOCAL_CINEMATIC_PLATE,
+        ...(dentalVid ? { heroVideoUrl: dentalVid } : {}),
+      }
+    : exp.threeDPreset === "house-heat-loss"
       ? {
           ...initialAssets,
           heroCinematic: "thermal_loss" as const,
@@ -333,7 +371,7 @@ export async function buildDemoConfig(input: BuildDemoConfigInput): Promise<Demo
     ...interim,
     compliance,
     aiSearch,
-    pageStrategy: exp.pageStrategy,
+    pageStrategy,
     visualDirection: exp.visualDirection,
     sceneSpec: exp.sceneSpec,
     designFingerprint: exp.designFingerprint,

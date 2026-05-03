@@ -45,6 +45,13 @@ export async function runDemoGenerationJob({
   const intelligenceSummary = intelligencePacket?.packetJson
     ? JSON.stringify(intelligencePacket.packetJson).slice(0, 12_000)
     : null;
+  const verifiedNearby =
+    (
+      intelligencePacket?.packetJson as
+        | { localSeoNotes?: { verifiedNearbyCities?: string[] } }
+        | null
+        | undefined
+    )?.localSeoNotes?.verifiedNearbyCities ?? undefined;
 
   const demoConfig = await buildDemoConfig({
     businessName: business.name,
@@ -68,6 +75,7 @@ export async function runDemoGenerationJob({
     socialLinks: (business.socialLinksJson as Record<string, string> | null) ?? undefined,
     recentDesignFingerprints,
     intelligenceSummary,
+    verifiedNearbyCities: verifiedNearby,
     recentSameNicheFingerprints,
   });
 

@@ -5,6 +5,7 @@ import type { DemoConfig } from "@/lib/renderer/demoConfig";
 import { ThreeSceneRouter } from "@/components/three/ThreeSceneRouter";
 import { RoofHeroScrollContext } from "@/components/three/RoofHeroScrollContext";
 import { CinematicThermalHero } from "@/components/demo/CinematicThermalHero";
+import { CinematicDentalLocalHero } from "@/components/demo/CinematicDentalLocalHero";
 import { HEAT_LOSS_CINEMATIC_PLATE } from "@/lib/cinematic/heatLossHero";
 import { cn } from "@/lib/utils/cn";
 import { useHeroScrollProgress } from "@/lib/hooks/useHeroScrollProgress";
@@ -14,6 +15,7 @@ export function PremiumHero3D({ config }: { config: DemoConfig }) {
   const { copy, design, business, strategy, assets } = config;
   const dark = design.backgroundMode === "dark";
   const thermalCinematic = assets.heroCinematic === "thermal_loss";
+  const dentalLocalCinematic = assets.heroCinematic === "dental_local";
   const staticHeroUrl =
     assets.heroAssetUrl?.trim() || HEAT_LOSS_CINEMATIC_PLATE;
   const roofScrollScene =
@@ -31,6 +33,8 @@ export function PremiumHero3D({ config }: { config: DemoConfig }) {
       <div className="absolute inset-0">
         {thermalCinematic ? (
           <CinematicThermalHero config={config} />
+        ) : dentalLocalCinematic ? (
+          <CinematicDentalLocalHero config={config} />
         ) : assets.use3DFallback ? (
           <ThreeSceneRouter
             scene={design.threeDPreset}
@@ -49,7 +53,7 @@ export function PremiumHero3D({ config }: { config: DemoConfig }) {
             className="h-full w-full object-cover"
           />
         )}
-        {!thermalCinematic ? (
+        {!thermalCinematic && !dentalLocalCinematic ? (
           <>
             <div
               className={cn(
