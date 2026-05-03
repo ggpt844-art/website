@@ -39,6 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+!floss-gloss-website/next-env.d.ts
 
 # prisma
 prisma/migrations/dev.db*
